@@ -13,6 +13,7 @@ import '../../academics/presentation/academics_screen.dart';
 import '../../cbe/presentation/cbe_screen.dart';
 import '../../elearning/presentation/elearning_screen.dart';
 import '../../examinations/presentation/examinations_screen.dart';
+import '../../finance/presentation/finance_screen.dart';
 import '../../student_success/presentation/student_success_screen.dart';
 import '../../assessment/presentation/assessments_screen.dart';
 import '../../assignments/presentation/assignments_screen.dart';
@@ -261,6 +262,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           group: s.settings,
           keywords: const ['subscription', 'billing', 'plan'],
           page: const SubscriptionsScreen(),
+        ),
+      if (roles.contains('admin') || roles.contains('owner') || roles.contains('principal') || roles.contains('accountant'))
+        NavItem(
+          id: ShellDestination.finance,
+          label: 'Finance',
+          icon: Icons.account_balance_outlined,
+          selectedIcon: Icons.account_balance,
+          group: s.settings,
+          keywords: const ['finance', 'invoices', 'payments', 'fees', 'reconciliation'],
+          page: const FinanceScreen(),
         ),
       if (can('audit.view'))
         NavItem(
