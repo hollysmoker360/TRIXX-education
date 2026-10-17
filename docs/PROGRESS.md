@@ -50,7 +50,7 @@ The product is branded **Trixx Education** ([ADR-012](DECISIONS.md)). Visual tru
 | Typography | ✅ | `core/theme/typography.dart`: Inter (bundled asset) with tabular figures for numbers |
 | Themes | ✅ | `core/theme/app_theme.dart`: `buildTheme(brightness, {schoolAccent})`, light + dark designed separately; school accent is contrast-corrected, semantic colours are not overridable |
 | Window classes | ✅ | `core/layout/window_class.dart`: Material breakpoints 600/840/1200; `usesRail`, `extendedRail`, `showsBreadcrumbs`, `contentColumns`, `gutter` |
-| Adaptive shell | ✅ | `core/layout/adaptive_shell.dart`: bottom bar → rail → extended sidebar from width; lazily built pages kept alive across navigation and resize; command palette (Ctrl/⌘-K) |
+| Adaptive shell | ✅ | `core/layout/adaptive_shell.dart`: bottom bar → rail → extended sidebar (with section headings) from width; lazily built pages kept alive across navigation and resize; command palette (Ctrl/⌘-K) |
 | Top bar | ✅ | `core/layout/app_top_bar.dart`: page title, search, notifications badge, sync indicator, profile menu (theme + language) |
 | Page frame | ✅ | `core/layout/{screen_scaffold,page_header}.dart`: one H1 per page, breadcrumbs from expanded up, primary/secondary actions |
 | Component library | ✅ | `core/widgets/{states,surfaces,inputs,data,overlays,brand,charts,motion,offline,sync_indicator,common}.dart` |
@@ -66,7 +66,7 @@ The product is branded **Trixx Education** ([ADR-012](DECISIONS.md)). Visual tru
 | session + token store (secure storage, theme/locale/column-view persistence) | ✅ | `core/session`, `core/networking/token_store.dart` |
 | API client (Dio, JWT, single-flight refresh, RFC 7807 mapping) | ✅ | `core/networking/api_client.dart` |
 | declarative navigation (GoRouter) | ✅ | `lib/app/router.dart` (routes) + `core/router/app_routes.dart` (paths) |
-| home shell / navigation | ✅ | `features/home/presentation/home_shell.dart` (permission-filtered, grouped destinations); cross-screen jumps via `core/navigation/destinations.dart` ([ADR-016](DECISIONS.md)) |
+| home shell / navigation | ✅ | `features/home/presentation/home_shell.dart` (permission-filtered destinations in five sections: Workspace, Teaching & learning, School operations, Insights & communication, Administration); cross-screen jumps via `core/navigation/destinations.dart` ([ADR-016](DECISIONS.md)) |
 | today (role-aware landing) | ✅ | `features/dashboard/presentation/today_screen.dart` — gradient `HeroHeader` with quick actions, animated KPI tiles with accent rails, staggered worklists |
 | family (guardian view of children) | ✅ | `features/dashboard/presentation/parent_family_screen.dart` |
 | overview | ✅ | `features/overview` |
@@ -130,7 +130,7 @@ of this pass.)*
 |------|--------|-------|
 | Backend unit/integration tests | ✅ | surefire unit tests + failsafe `isolation` integration tests (`TenantIsolationIT`, `AuditLogQueryServiceTest`, `DataSubjectServiceTest`); `mvn verify` green |
 | ArchUnit boundary rules | ✅ | `ModuleBoundaryTest` enforces module boundaries, controller rules (also covers `subscriptions`/`featureflags`) |
-| Flutter tests | ✅ | 61 tests in `app/test/`: `widget_test.dart` (brand/format/strings), `l10n_test.dart` (EN/SW parity, catalogue↔getter coverage, ARB drift, placeholder declarations), `theme_test.dart` (WCAG contrast, light/dark, school-accent correction), `layout_test.dart` (breakpoints and per-class behaviour), `components_test.dart` (states, data table + sensitive masking, buttons, brand logo selection, avatars), `chat_test.dart` (STOMP framing incl. split frames/heartbeats/CRLF, destinations, socket subscription bookkeeping) |
+| Flutter tests | ✅ | 64 tests in `app/test/`: `widget_test.dart` (brand/format/strings), `l10n_test.dart` (EN/SW parity, catalogue↔getter coverage, ARB drift, placeholder declarations), `theme_test.dart` (WCAG contrast, light/dark, school-accent correction), `layout_test.dart` (breakpoints and per-class behaviour), `components_test.dart` (states, data table + sensitive masking, buttons, brand logo selection, avatars), `navigation_test.dart` (sidebar section headings, rail fallback), `chat_test.dart` (STOMP framing incl. split frames/heartbeats/CRLF, destinations, socket subscription bookkeeping) |
 | Flutter golden / accessibility tests | ❌ | Component gallery is screenshot-ready; goldens not yet captured |
 | Flutter integration tests | ❌ | `app/integration_test/` present but empty |
 | GitHub Actions workflows | ✅ | `.github/workflows/ci.yml` (backend + Flutter jobs) |

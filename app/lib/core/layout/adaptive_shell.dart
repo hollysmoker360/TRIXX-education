@@ -170,19 +170,18 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
 
   Widget _rail(BuildContext context, WindowClass window) {
     final extended = window.extendedRail;
+    if (extended) return _sidebar(context);
     return SingleChildScrollView(
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: MediaQuery.sizeOf(context).height),
         child: IntrinsicHeight(
           child: NavigationRail(
-            extended: extended,
-            minExtendedWidth: AppLayout.sidebarWidth,
             selectedIndex: widget.selectedIndex,
             onDestinationSelected: widget.onSelected,
-            labelType: extended ? NavigationRailLabelType.none : NavigationRailLabelType.all,
-            leading: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
-              child: TrixxLogo(height: 32, markOnly: !extended),
+            labelType: NavigationRailLabelType.all,
+            leading: const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.s16),
+              child: TrixxLogo(height: 32, markOnly: true),
             ),
             destinations: [
               for (var i = 0; i < widget.items.length; i++)
@@ -247,29 +246,73 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
               ),
             ),
             const Divider(height: 1),
-            for (var i = 0; i < widget.items.length; i++) ...[
-              if (i == 0 || widget.items[i].group != widget.items[i - 1].group)
-                if (widget.items[i].group != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, AppSpacing.s4),
-                    child: Text(
-                      widget.items[i].group!,
-                      style: context.texts.labelSmall?.copyWith(color: context.tokens.textSecondary),
-                    ),
-                  ),
-              ListTile(
-                leading: Icon(widget.items[i].icon),
-                title: Text(widget.items[i].label),
-                selected: i == widget.selectedIndex,
-                onTap: () {
-                  widget.onSelected(i);
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
+            ..._groupedTiles(context, onTap: (i) {
+              widget.onSelected(i);
+              Navigator.of(context).pop();
+            }),
           ],
         ),
       ),
     );
+  }
+
+  /// The extended sidebar: the rail cannot show section headings, so wide
+  /// windows list the destinations under their group labels instead.
+  Widget _sidebar(BuildContext context) {
+    return Material(
+      color: Theme.of(context).navigationRailTheme.backgroundColor,
+      child: SizedBox(
+        width: AppLayout.sidebarWidth,
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: AppSpacing.s16),
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, AppSpacing.s8),
+              child: Align(alignment: Alignment.centerLeft, child: TrixxLogo(height: 32)),
+            ),
+            ..._groupedTiles(context, onTap: widget.onSelected, dense: true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Destinations in order, with a heading wherever the group changes.
+  List<Widget> _groupedTiles(
+    BuildContext context, {
+    required ValueChanged<int> onTap,
+    bool dense = false,
+  }) {
+    final items = widget.items;
+    return [
+      for (var i = 0; i < items.length; i++) ...[
+        if (items[i].group != null && (i == 0 || items[i].group != items[i - 1].group))
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, AppSpacing.s4),
+            child: Semantics(
+              header: true,
+              child: Text(
+                items[i].group!.toUpperCase(),
+                style: context.texts.labelSmall?.copyWith(
+                  color: context.tokens.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+          ),
+        Padding(
+          padding: dense ? const EdgeInsets.symmetric(horizontal: AppSpacing.s8) : EdgeInsets.zero,
+          child: ListTile(
+            dense: dense,
+            visualDensity: dense ? VisualDensity.compact : null,
+            leading: Icon(i == widget.selectedIndex ? (items[i].selectedIcon ?? items[i].icon) : items[i].icon),
+            title: Text(items[i].label),
+            selected: i == widget.selectedIndex,
+            onTap: () => onTap(i),
+          ),
+        ),
+      ],
+    ];
   }
 }

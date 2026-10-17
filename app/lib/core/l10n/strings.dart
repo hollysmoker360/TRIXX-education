@@ -85,6 +85,11 @@ class S {
   String get notifications => _v('notifications');
   String get marks => _v('marks');
   String get learn => _v('learn');
+  String get navWorkspace => _v('navWorkspace');
+  String get navTeachingLearning => _v('navTeachingLearning');
+  String get navSchoolOperations => _v('navSchoolOperations');
+  String get navInsightsCommunication => _v('navInsightsCommunication');
+  String get navAdministration => _v('navAdministration');
   String get family => _v('family');
   String get finances => _v('finances');
   String get commandGallery => _v('commandGallery');
@@ -594,6 +599,11 @@ const _en = <String, String>{
   'notifications': 'Notifications',
   'marks': 'Marks',
   'learn': 'Learn',
+  'navWorkspace': 'Workspace',
+  'navTeachingLearning': 'Teaching & learning',
+  'navSchoolOperations': 'School operations',
+  'navInsightsCommunication': 'Insights & communication',
+  'navAdministration': 'Administration',
   'family': 'Family',
   'finances': 'Finances',
   'commandGallery': 'Component gallery',
@@ -1039,6 +1049,11 @@ const _sw = <String, String>{
   'notifications': 'Arifa',
   'marks': 'Alama',
   'learn': 'Jifunze',
+  'navWorkspace': 'Eneo la kazi',
+  'navTeachingLearning': 'Ufundishaji na ujifunzaji',
+  'navSchoolOperations': 'Shughuli za shule',
+  'navInsightsCommunication': 'Maarifa na mawasiliano',
+  'navAdministration': 'Utawala',
   'family': 'Familia',
   'finances': 'Fedha',
   'commandGallery': 'Maktaba ya vipengele',

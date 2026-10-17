@@ -181,6 +181,26 @@
   "@learn": {
     "description": ""
   },
+  "navWorkspace": "Workspace",
+  "@navWorkspace": {
+    "description": ""
+  },
+  "navTeachingLearning": "Teaching & learning",
+  "@navTeachingLearning": {
+    "description": ""
+  },
+  "navSchoolOperations": "School operations",
+  "@navSchoolOperations": {
+    "description": ""
+  },
+  "navInsightsCommunication": "Insights & communication",
+  "@navInsightsCommunication": {
+    "description": ""
+  },
+  "navAdministration": "Administration",
+  "@navAdministration": {
+    "description": ""
+  },
   "family": "Family",
   "@family": {
     "description": ""
