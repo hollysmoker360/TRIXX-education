@@ -46,6 +46,11 @@ jobs:
         run: mvn -B -Dmaven.repo.local=${{ github.workspace }}/m2repo test
         working-directory: backend
 
+      - name: Provision the application role
+        run: psql -v ON_ERROR_STOP=1 -h localhost -p 5433 -U schoolsphere -d schoolsphere -f deploy/scripts/provision-db.sql
+        env:
+          PGPASSWORD: schoolsphere_dev
+
       - name: Run integration tests (cross-tenant isolation)
         run: mvn -B -Dmaven.repo.local=${{ github.workspace }}/m2repo failsafe:integration-test failsafe:verify
         working-directory: backend
