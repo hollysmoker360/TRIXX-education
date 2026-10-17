@@ -1,0 +1,25 @@
+# Local development profile: portable PostgreSQL + local storage, seed data enabled.
+spring:
+  datasource:
+    url: ${SCHOOLSPHERE_DB_URL:jdbc:postgresql://localhost:5433/schoolsphere}
+    username: ${SCHOOLSPHERE_DB_USER:schoolsphere_app}
+    password: ${SCHOOLSPHERE_DB_PASSWORD:schoolsphere_app_dev}
+    hikari:
+      maximum-pool-size: 10
+  flyway:
+    enabled: true
+    url: ${SCHOOLSPHERE_DB_URL:jdbc:postgresql://localhost:5433/schoolsphere}
+    user: ${SCHOOLSPHERE_DB_OWNER:schoolsphere}
+    password: ${SCHOOLSPHERE_DB_OWNER_PASSWORD:schoolsphere_dev}
+    locations: classpath:db/migration
+
+schoolsphere:
+  profile: dev
+  seed:
+    enabled: true
+  billing:
+    enabled: false
+
+logging:
+  level:
+    com.schoolsphere: DEBUG

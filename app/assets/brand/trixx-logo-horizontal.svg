@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 96" width="576" height="192" role="img" aria-label="Trixx Education">
+  <title>Trixx Education</title>
+  <!-- Mark: a mortarboard resting on two layers (three audiences, learning built step by step),
+       with an amber cord and button for the graduation cue. -->
+  <g>
+    <rect width="96" height="96" rx="24" fill="#172B4D"/>
+    <polygon points="48,19 80,36 48,53 16,36" fill="#FFFFFF"/>
+    <line x1="48" y1="36" x2="72" y2="36" stroke="#E6A23C" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="48" cy="36" r="3" fill="#172B4D"/>
+    <circle cx="73" cy="36" r="3.4" fill="#E6A23C"/>
+    <polyline points="16,45.5 48,62.5 80,45.5" fill="none" stroke="#0F9F91" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="16,57.5 48,74.5 80,57.5" fill="none" stroke="#52D4C2" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <!-- Wordmark "Trixx": geometric strokes, no font required. The final x has one teal stroke
+       and the dot of the i is teal. -->
+  <g fill="none" stroke="#172B4D" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M124 18 H160 M142 18 V54"/>
+    <path d="M172 30 V54 M172 42 C172 34 178 30 187 30"/>
+    <path d="M202 30 V54"/>
+    <path d="M217 30 L241 54 M241 30 L217 54"/>
+    <path d="M256 30 L280 54"/>
+  </g>
+  <path d="M280 30 L256 54" fill="none" stroke="#0F9F91" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="202" cy="17" r="4.8" fill="#0F9F91"/>
+  <!-- "Education": live text stretched to the exact width of the wordmark.
+       Convert to outlines before sending to print. -->
+  <text x="120" y="82" font-family="Inter, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="17" font-weight="600" letter-spacing="2" fill="#087F73" textLength="164" lengthAdjust="spacing">Education</text>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Trixx Education">
+  <title>Trixx Education monochrome mark</title>
+  <!-- Single-colour silhouette for Android themed icons, iOS tinted icons, and one-colour print.
+       Uses currentColor so the host can recolour it (navy on light, white on dark). -->
+  <g fill="currentColor" stroke="currentColor">
+    <polygon points="48,19 80,36 48,53 16,36" stroke="none"/>
+    <line x1="48" y1="36" x2="72" y2="36" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="48" cy="36" r="3" stroke="none"/>
+    <circle cx="73" cy="36" r="3.4" stroke="none"/>
+    <polyline points="16,45.5 48,62.5 80,45.5" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="16,57.5 48,74.5 80,57.5" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,0 +1,28 @@
+# Cloud stack (docs/OPERATIONS.md section 1). Runs the same backend artifact with the `cloud`
+# profile against the platform database and object storage. The PostgreSQL instance and the S3
+# bucket are normally owned by the platform, so this file documents the required container
+# configuration and expects SCHOOLSPHERE_DB_URL / SCHOOLSPHERE_STORAGE_TYPE to be provided by the
+# orchestrator; only the app container is defined here.
+services:
+  backend:
+    build:
+      context: ../../../backend
+      dockerfile: ../../deploy/docker/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: cloud
+      SCHOOLSPHERE_DB_URL: ${SCHOOLSPHERE_DB_URL:-}
+      SCHOOLSPHERE_DB_USER: ${SCHOOLSPHERE_DB_USER:-}
+      SCHOOLSPHERE_DB_PASSWORD: ${SCHOOLSPHERE_DB_PASSWORD:-}
+      SCHOOLSPHERE_DB_OWNER: ${SCHOOLSPHERE_DB_OWNER:-}
+      SCHOOLSPHERE_DB_OWNER_PASSWORD: ${SCHOOLSPHERE_DB_OWNER_PASSWORD:-}
+      SCHOOLSPHERE_STORAGE_TYPE: ${SCHOOLSPHERE_STORAGE_TYPE:-s3}
+      SCHOOLSPHERE_STORAGE_ROOT: ${SCHOOLSPHERE_STORAGE_ROOT:-}
+      SCHOOLSPHERE_JWT_SECRET: ${SCHOOLSPHERE_JWT_SECRET:-}
+      SPRING_CLOUD_APPLICATION_NAME: schoolsphere-cloud
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/liveness || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5

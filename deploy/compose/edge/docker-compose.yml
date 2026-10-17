@@ -1,0 +1,41 @@
+# Edge node stack (docs/OPERATIONS.md section 1, runbooks/deploy-edge.md). Same backend
+# artifact with the `edge` profile: local PostgreSQL on :5432, local storage, billing off, no
+# seeding. Replicates to/from the cloud over mTLS + JWT (manual today).
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: schoolsphere
+      POSTGRES_PASSWORD: schoolsphere_dev
+      POSTGRES_DB: schoolsphere
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U schoolsphere -d schoolsphere"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ../../../backend
+      dockerfile: ../../deploy/docker/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: edge
+      SCHOOLSPHERE_DB_URL: jdbc:postgresql://postgres:5432/schoolsphere
+      SCHOOLSPHERE_DB_USER: schoolsphere_app
+      SCHOOLSPHERE_DB_PASSWORD: schoolsphere_app_dev
+      SCHOOLSPHERE_DB_OWNER: schoolsphere
+      SCHOOLSPHERE_DB_OWNER_PASSWORD: schoolsphere_dev
+      SCHOOLSPHERE_STORAGE_TYPE: local
+      SCHOOLSPHERE_STORAGE_ROOT: /data/storage
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

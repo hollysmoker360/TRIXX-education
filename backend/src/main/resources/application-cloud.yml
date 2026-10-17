@@ -1,0 +1,27 @@
+# Cloud profile: system of record, many tenants, billing and platform admin enabled.
+spring:
+  datasource:
+    url: ${SCHOOLSPHERE_DB_URL}
+    username: ${SCHOOLSPHERE_DB_USER}
+    password: ${SCHOOLSPHERE_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${SCHOOLSPHERE_DB_POOL:20}
+  flyway:
+    enabled: true
+    url: ${SCHOOLSPHERE_DB_URL}
+    user: ${SCHOOLSPHERE_DB_OWNER}
+    password: ${SCHOOLSPHERE_DB_OWNER_PASSWORD}
+
+logging:
+  structured:
+    format:
+      console: ecs
+
+schoolsphere:
+  profile: cloud
+  seed:
+    enabled: ${SCHOOLSPHERE_SEED_ENABLED:false}
+  billing:
+    enabled: true
+  storage:
+    type: ${SCHOOLSPHERE_STORAGE_TYPE:s3}

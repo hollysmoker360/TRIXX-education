@@ -1,0 +1,21 @@
+# Flutter web client image (docs/OPERATIONS.md). Builds the release web bundle and serves it with a
+# minimal nginx; the browser talks to the backend directly (same origin or via CORS).
+FROM ghcr.io/flutter-dev/flutter AS build
+
+WORKDIR /app
+
+COPY pubspec.yaml pubspec.lock ./
+RUN flutter pub get
+
+COPY lib lib
+RUN flutter build web --release --web-renderer canvaskit
+
+FROM nginx:1.27-alpine
+
+COPY --from=build /app/build/web /usr/share/nginx/html
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD wget -qO /dev/null http://localhost/ || exit 1

@@ -1,0 +1,36 @@
+# Line endings
+#
+# The Dart and Java sources are LF everywhere (see docs/RUNNING.md): a CRLF
+# checkout breaks the editor/lint expectations and produces noisy diffs. Force
+# LF in the repository *and* in the working tree so a clone behaves identically
+# on Windows, macOS, and Linux.
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF, which is what cmd.exe expects.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binaries must never be line-ending converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+*.jar binary
+*.zip binary
+*.gz binary
+*.keystore binary
+
+# Generated, machine-owned files: never merge them by hand.
+app/pubspec.lock linguist-generated=true
+app/lib/l10n/app_en.arb linguist-generated=true
+app/lib/l10n/app_sw.arb linguist-generated=true
+
+# Language statistics: keep the repo readable on GitHub.
+docs/* linguist-documentation

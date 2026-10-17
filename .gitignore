@@ -1,0 +1,59 @@
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+*.iml
+
+# ---- Java / Maven (backend) ----
+backend/target/
+*.class
+*.jar
+*.war
+hs_err_pid*
+replay_pid*
+
+# ---- Flutter / Dart (app) ----
+# NOTE: app/.gitignore (Flutter default) already excludes .dart_tool/, build/, etc.
+# The entries below cover build artifacts that are not covered there.
+app/.dart_tool/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/android/.gradle/
+app/android/app/.cxx/
+app/android/local.properties
+app/**/GeneratedPluginRegistrant.java
+app/**/GeneratedPluginRegistrant.kt
+*.g.dart
+*.freezed.dart
+
+# ---- Secrets / local configuration ----
+# Never commit real credentials, signing keys, or mTLS material.
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.jks
+*.keystore
+secrets/
+**/mtls/
+
+# ---- Runtime data (local dev) ----
+data/
+storage/
+*.log
+logs/
+pgdata/
+
+# ---- Test / coverage reports ----
+backend/**/target/site/
+coverage/
+*.exec
+
+# ---- Tooling caches ----
+.m2/
+.flutter/

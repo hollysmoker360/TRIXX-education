@@ -1,0 +1,30 @@
+# Edge profile: one school (or configured small set) on a local server, replica of the cloud.
+spring:
+  datasource:
+    url: ${SCHOOLSPHERE_DB_URL:jdbc:postgresql://localhost:5432/schoolsphere}
+    username: ${SCHOOLSPHERE_DB_USER:schoolsphere_app}
+    password: ${SCHOOLSPHERE_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+  flyway:
+    enabled: true
+    url: ${SCHOOLSPHERE_DB_URL:jdbc:postgresql://localhost:5432/schoolsphere}
+    user: ${SCHOOLSPHERE_DB_OWNER:schoolsphere}
+    password: ${SCHOOLSPHERE_DB_OWNER_PASSWORD}
+
+logging:
+  structured:
+    format:
+      console: ecs
+
+schoolsphere:
+  profile: edge
+  seed:
+    enabled: false
+  billing:
+    enabled: false
+  storage:
+    type: local
+  edge:
+    cloud-base-url: ${SCHOOLSPHERE_CLOUD_URL:}
+    sync-enabled: ${SCHOOLSPHERE_EDGE_SYNC:false}
