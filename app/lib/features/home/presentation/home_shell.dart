@@ -10,6 +10,7 @@ import '../../../core/navigation/destinations.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/session/session.dart';
 import '../../academics/presentation/academics_screen.dart';
+import '../../advanced/presentation/advanced_screen.dart';
 import '../../cbe/presentation/cbe_screen.dart';
 import '../../communication/presentation/communication_screen.dart';
 import '../../hr/presentation/hr_screen.dart';
@@ -352,6 +353,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         keywords: const ['settings', 'preferences'],
         page: const SettingsScreen(),
       ),
+      if (can('subscription.manage'))
+        NavItem(
+          id: ShellDestination.advanced,
+          label: 'Advanced',
+          icon: Icons.auto_awesome_outlined,
+          selectedIcon: Icons.auto_awesome,
+          group: s.settings,
+          keywords: const ['ai', 'analytics', 'insights', 'advanced'],
+          page: const AdvancedScreen(),
+        ),
       if (kDebugMode)
         NavItem(
           label: s.componentGallery,

@@ -28,6 +28,7 @@ abstract final class ShellDestination {
   static const hr = 'hr';
   static const inventory = 'inventory';
   static const transport = 'transport';
+  static const advanced = 'advanced';
   static const reports = 'reports';
   static const resources = 'resources';
   static const tasks = 'tasks';
