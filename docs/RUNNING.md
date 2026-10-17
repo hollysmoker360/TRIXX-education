@@ -117,6 +117,23 @@ java -jar target\schoolsphere-backend-0.1.0.jar
 
 Both modes use the same dev defaults.
 
+## 5. Run the Flutter web client (online app)
+
+The Flutter client already builds as a web application (PWA) with an offline-capable
+service worker. To produce a production web bundle:
+
+```powershell
+cd app
+flutter build web --release --no-wasm-dry-run --dart-define=API_BASE_URL=https://your-backend.example.com
+```
+
+The output lands in `app/build/web/` and can be served by any static host (Nginx,
+Cloudflare Pages, GitHub Pages, Vercel, etc.). The `API_BASE_URL` dart-define points the
+client at the deployed Java backend; omit it to keep the localhost dev default.
+
+The bundle includes `manifest.json` and `flutter_service_worker.js`, so it installs as a
+PWA on supported browsers and works offline for cached, read-only screens.
+
 ## 5. Run the Flutter client
 
 From `app/`:
