@@ -76,6 +76,7 @@ The product is branded **Trixx Education** ([ADR-012](DECISIONS.md)). Visual tru
 | quizzes | ✅ | `features/quizzes` |
 | marks (assessments hub, marks entry, report card) | ✅ | `features/assessment` — built on the assignment grade endpoints (no gradebook backend yet, [ADR-013](DECISIONS.md)) |
 | examinations (assessments, sittings, marking queue, results) | ✅ | `features/examinations` on the `examinations` backend module: review/approval workflow, class registration, marking + moderation, result publication ([ADR-021](DECISIONS.md)). No question bank or timed online attempts yet |
+| e-learning (courses, assignments, resources) | ✅ | `features/elearning` on the `elearning` backend module: courses as ordered paths over existing resources/assignments/quizzes, class or self enrollment, progress + outcomes, completion records ([ADR-022](DECISIONS.md)). Assignments/resources tabs reuse `/api/v1/learning` |
 | student profile | ✅ | `features/people/presentation/student_profile_screen.dart` (identity, enrolment, attendance, report card link) |
 | tasks | ✅ | `features/tasks` |
 | chat | ✅ | **Realtime over STOMP/WebSocket** (`/ws`): live messages, typing indicator, delivery confirmation, reconnect with backoff, and REST polling kept only as the offline fallback ([ADR-015](DECISIONS.md)). Protocol in `core/chat/{stomp,chat_socket}.dart`, wiring in `features/chat/` |
