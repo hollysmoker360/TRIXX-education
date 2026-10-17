@@ -23,6 +23,7 @@ abstract final class ShellDestination {
   static const examinations = 'examinations';
   static const studentSuccess = 'studentSuccess';
   static const finance = 'finance';
+  static const communication = 'communication';
   static const reports = 'reports';
   static const resources = 'resources';
   static const tasks = 'tasks';

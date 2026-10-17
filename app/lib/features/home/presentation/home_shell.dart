@@ -11,6 +11,7 @@ import '../../../core/router/app_routes.dart';
 import '../../../core/session/session.dart';
 import '../../academics/presentation/academics_screen.dart';
 import '../../cbe/presentation/cbe_screen.dart';
+import '../../communication/presentation/communication_screen.dart';
 import '../../elearning/presentation/elearning_screen.dart';
 import '../../examinations/presentation/examinations_screen.dart';
 import '../../finance/presentation/finance_screen.dart';
@@ -245,6 +246,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           group: s.people,
           keywords: const ['students', 'staff', 'people', 'directory'],
           page: const PeopleScreen(),
+        ),
+      if (can('people.view'))
+        NavItem(
+          id: ShellDestination.communication,
+          label: 'Communication',
+          icon: Icons.campaign_outlined,
+          selectedIcon: Icons.campaign,
+          group: s.people,
+          keywords: const ['messages', 'announcements', 'notifications', 'meetings'],
+          page: const CommunicationScreen(),
         ),
       NavItem(
         label: s.notifications,
