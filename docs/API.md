@@ -138,6 +138,19 @@ user prefix `/user`). See [ADR-005](DECISIONS.md).
 |---------------|-----------|
 | `GET /rooms?classGroupId=&subjectId=&topic=&date=` (Jitsi room) | `school.view` |
 
+### examinations (`/api/v1/examinations`)
+| Method & path | Permission |
+|---------------|-----------|
+| `GET /assessments?status=`, `GET /assessments/{id}`, `GET /exam-sessions?assessmentId=`, `GET /exam-sessions/{id}/candidates`, `GET /results`, `GET /results/{assessmentId}/candidates` | `exam.manage` or `exam.mark` or `exam.approve` |
+| `POST /assessments`, `PATCH /assessments/{id}` (draft only), `DELETE /assessments/{id}` (draft, no sittings), `POST /assessments/{id}/submit`, `POST /assessments/{id}/archive` | `exam.manage` |
+| `POST /assessments/{id}/return`, `POST /assessments/{id}/approve`, `POST /assessments/{id}/publish` | `exam.approve` |
+| `POST /exam-sessions` (approved/published assessment; registers the class when `studentIds` is empty), `POST /exam-sessions/{id}/candidates`, `POST /exam-sessions/{id}/{start,complete,cancel}` | `exam.manage` |
+| `GET /marking-queue` | `exam.mark` or `exam.approve` |
+| `POST /marking-queue/{scriptId}/mark` (`{marks, absent, remarks}`) | `exam.mark` |
+| `POST /marking-queue/{scriptId}/moderate` (different examiner from the marker) | `exam.approve` |
+| `POST /results/{assessmentId}/publish` (every candidate marked or absent) | `exam.approve` |
+| `GET /my-results` (published results only) | `grade.view.own` |
+
 ### attendance (`/api/v1/attendance`)
 | Method & path | Permission |
 |---------------|-----------|

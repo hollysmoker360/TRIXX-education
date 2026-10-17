@@ -23,6 +23,8 @@ jobs:
           POSTGRES_USER: schoolsphere
           POSTGRES_PASSWORD: schoolsphere_dev
           POSTGRES_DB: schoolsphere
+          # Listen on 5433 inside the container so the 5433:5433 mapping and the dev-profile URL agree.
+          PGPORT: 5433
         ports:
           - 5433:5433
         options: >-
@@ -43,6 +45,11 @@ jobs:
       - name: Build and run unit tests
         run: mvn -B -Dmaven.repo.local=${{ github.workspace }}/m2repo test
         working-directory: backend
+
+      - name: Provision the application role
+        run: psql -v ON_ERROR_STOP=1 -h localhost -p 5433 -U schoolsphere -d schoolsphere -f deploy/scripts/provision-db.sql
+        env:
+          PGPASSWORD: schoolsphere_dev
 
       - name: Run integration tests (cross-tenant isolation)
         run: mvn -B -Dmaven.repo.local=${{ github.workspace }}/m2repo failsafe:integration-test failsafe:verify

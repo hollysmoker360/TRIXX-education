@@ -1,1 +1,22 @@
 \n## ADR-020 — CP-SAT/OR-Tools as the timetable engine, with an automatic fallback\n\n- **Status:** Accepted (implemented 2026-10-17)\n- **Context:** The handbook asks for a staged solve (feasibility then optimisation), assumption\n  literals that diagnose infeasibility, relaxed \"unmet requirements\" drafts that can never be\n  published, and rooms assigned in a second step. The existing heuristic generator stays as the\n  engine for partial regeneration and for environments where the native solver cannot run.\n- **Decision:**\n  - **Engine.** `TimetableCpSolver` builds a CP-SAT model (OR-Tools Java 9.11). Each requirement\n    carries a Boolean \"met\" literal, so the three stages are one model: stage one asserts every\n    literal (feasibility, with `sufficientAssumptionsForInfeasibility` naming the impossible\n    requirements), stage two releases the assumptions and maximises the number met while minimising\n    gaps, and a failed stage one yields the relaxed draft whose unmet requirements are reported.\n  - **Consecutive-lesson rule.** `busy[t] + busy[t+1] <= 1 + doubleStartsAt[t]` per teacher and per\n    adjacent pair inside one session, so a break or lunch ends a session and a double never straddles\n    it. Only the strict limit (1) is modelled; a per-teacher override above 1 is enforced by the\n    validator on the resulting grid, exactly as the heuristic generator does.\n  - **Rooms** are assigned in a second step by `RoomAssigner`, so the model stays small and the room\n    pass is a pure, independently tested function.\n  - **Relaxed drafts are not publishable.** `timetable_version.unmet_requirements` records how many\n    requirements the solver could not place; `publish` refuses while it is positive, and the version's\n    note records that it is a relaxed draft.\n  - **Fallback.** The solver is selected by `timetable.solver` (default `cp_sat`) but only when the\n    native library loads in this JVM; otherwise, or when locked placements must be preserved verbatim,\n    generation falls back to the heuristic generator with a logged reason, so a missing native library\n    never breaks timetable generation.\n  - **Second step / LNS.** Partial regeneration keeps the heuristic engine (which already supports\n    locked entries), so a partial regenerate never disturbs a published placement; the CP-SAT path is\n    used for full generation.\n- **Consequences:**\n  - Verified by `TimetableCpSolverTest`, which runs the real solver: a small school places every\n    requirement with no consecutive violations, an impossible requirement is reported as unmet, and\n    `RoomAssigner` never double-books a room.\n  - The native library extracts into `java.io.tmpdir` at first use, so a writable temp directory is a\n    deployment requirement (see RUNNING.md).\n  - Assumption-based diagnosis blames a sufficient subset of the requirements, not necessarily the\n    minimal one; the validator remains the independent check that the published grid is sound.
+
+## ADR-021 — Examinations as a separate module from assignment grading
+
+- **Status:** Accepted (implemented 2026-10-17)
+- **Context:** The Examinations screen called `/api/v1/examinations/*` endpoints that did not exist.
+  Formal exams need review and approval, scheduled sittings, moderation and controlled result
+  publication, which the assignment grade endpoints (ADR-013) do not model.
+- **Decision:**
+  - New `examinations` module with `exam_assessment` (DRAFT → IN_REVIEW → APPROVED → PUBLISHED, or
+    ARCHIVED), `exam_session` (SCHEDULED → IN_PROGRESS → COMPLETED, or CANCELLED) and `exam_script`
+    (PENDING → MARKED → MODERATED, or ABSENT). All three are tenant-isolated by RLS.
+  - Candidates are existing `student` rows read through `PeopleApi`; a student sits an assessment once
+    (`uq_exam_script_candidate`). An empty candidate list registers the assessment's class.
+  - Permissions `exam.manage`, `exam.mark` and `exam.approve`; V21 backfills them into existing schools'
+    system roles. A marker cannot moderate their own script.
+  - Results are computed from scripts; publishing needs every candidate marked or absent and then locks
+    marks. Students see only published results (`GET /my-results`).
+- **Consequences:**
+  - Question banks, timed online attempts and seating plans are not built yet. Online quizzes stay in the
+    learning module.
+  - Each assessment, marking, moderation and publication change is written to the audit log.

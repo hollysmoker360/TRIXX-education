@@ -157,7 +157,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           keywords: const ['marks', 'grades', 'results', 'alama'],
           page: const AssessmentsScreen(),
         ),
-      if (can('grade.enter') || can('assessment.approve'))
+      if (can('exam.manage') || can('exam.mark') || can('exam.approve'))
         NavItem(
           id: ShellDestination.examinations,
           label: 'Examinations',
