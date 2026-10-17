@@ -12,6 +12,7 @@ import '../../../core/session/session.dart';
 import '../../academics/presentation/academics_screen.dart';
 import '../../cbe/presentation/cbe_screen.dart';
 import '../../elearning/presentation/elearning_screen.dart';
+import '../../examinations/presentation/examinations_screen.dart';
 import '../../assessment/presentation/assessments_screen.dart';
 import '../../assignments/presentation/assignments_screen.dart';
 import '../../attendance/presentation/attendance_screen.dart';
@@ -133,6 +134,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           group: s.academics,
           keywords: const ['marks', 'grades', 'results', 'alama'],
           page: const AssessmentsScreen(),
+        ),
+      if (can('grade.enter') || can('assessment.approve'))
+        NavItem(
+          id: ShellDestination.examinations,
+          label: 'Examinations',
+          icon: Icons.assignment_outlined,
+          selectedIcon: Icons.assignment,
+          group: s.academics,
+          keywords: const ['exams', 'assessments', 'marking', 'results'],
+          page: const ExaminationsScreen(),
         ),
       if (can('tasks.own'))
         NavItem(
