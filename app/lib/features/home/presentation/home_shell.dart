@@ -10,6 +10,7 @@ import '../../../core/navigation/destinations.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/session/session.dart';
 import '../../academics/presentation/academics_screen.dart';
+import '../../cbe/presentation/cbe_screen.dart';
 import '../../assessment/presentation/assessments_screen.dart';
 import '../../assignments/presentation/assignments_screen.dart';
 import '../../attendance/presentation/attendance_screen.dart';
@@ -151,6 +152,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           group: s.academics,
           keywords: const ['classes', 'subjects', 'years', 'terms'],
           page: const AcademicsScreen(),
+        ),
+      if (can('academics.view'))
+        NavItem(
+          id: ShellDestination.cbe,
+          label: 'CBE',
+          icon: Icons.track_changes_outlined,
+          selectedIcon: Icons.track_changes,
+          group: s.academics,
+          keywords: const ['cbe', 'competencies', 'curriculum', 'rubrics'],
+          page: const CbeScreen(),
         ),
       if (can('attendance.report'))
         NavItem(
