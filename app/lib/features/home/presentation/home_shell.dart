@@ -11,6 +11,7 @@ import '../../../core/router/app_routes.dart';
 import '../../../core/session/session.dart';
 import '../../academics/presentation/academics_screen.dart';
 import '../../cbe/presentation/cbe_screen.dart';
+import '../../elearning/presentation/elearning_screen.dart';
 import '../../assessment/presentation/assessments_screen.dart';
 import '../../assignments/presentation/assignments_screen.dart';
 import '../../attendance/presentation/attendance_screen.dart';
@@ -182,6 +183,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           group: s.learn,
           keywords: const ['learning hub', 'resources', 'materials'],
           page: const ResourcesScreen(),
+        ),
+      if (can('learning.view'))
+        NavItem(
+          id: ShellDestination.elearning,
+          label: 'E-Learning',
+          icon: Icons.play_circle_outline,
+          selectedIcon: Icons.play_circle,
+          group: s.learn,
+          keywords: const ['courses', 'lessons', 'assignments', 'online learning'],
+          page: const ELearningScreen(),
         ),
       if (can('learning.view'))
         NavItem(
