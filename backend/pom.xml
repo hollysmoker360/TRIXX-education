@@ -111,6 +111,14 @@
       <version>${archunit.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- OR-Tools CP-SAT solver (spec 12.1). The platform jars are pulled transitively
+         and the right native library is loaded at runtime for the host OS. -->
+    <dependency>
+      <groupId>com.google.ortools</groupId>
+      <artifactId>ortools-java</artifactId>
+      <version>9.11.4210</version>
+    </dependency>
   </dependencies>
 
   <build>

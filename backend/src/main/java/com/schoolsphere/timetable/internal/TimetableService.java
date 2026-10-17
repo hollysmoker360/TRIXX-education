@@ -36,6 +36,7 @@ public class TimetableService {
     private final TimetableEntryRepository entryRepository;
     private final TimetableValidator validator;
     private final TimetableGenerator generator;
+    private final TimetableCpSolver cpSolver;
     private final LessonScheduleService lessonScheduleService;
     private final com.schoolsphere.people.api.PeopleApi peopleApi;
     private final AcademicsApi academicsApi;
@@ -43,7 +44,7 @@ public class TimetableService {
     private final JdbcTemplate jdbc;
 
     public TimetableService(TimetableVersionRepository versionRepository, TimetableEntryRepository entryRepository,
-                            TimetableValidator validator, TimetableGenerator generator,
+                            TimetableValidator validator, TimetableGenerator generator, TimetableCpSolver cpSolver,
                             LessonScheduleService lessonScheduleService,
                             com.schoolsphere.people.api.PeopleApi peopleApi, AcademicsApi academicsApi,
                             TenantsApi tenantsApi, JdbcTemplate jdbc) {
@@ -51,6 +52,7 @@ public class TimetableService {
         this.entryRepository = entryRepository;
         this.validator = validator;
         this.generator = generator;
+        this.cpSolver = cpSolver;
         this.lessonScheduleService = lessonScheduleService;
         this.peopleApi = peopleApi;
         this.academicsApi = academicsApi;
@@ -150,6 +152,11 @@ public class TimetableService {
         TimetableVersion version = requireVersion(id);
         if ("archived".equals(version.getState())) {
             throw ApiException.conflict("version_archived", "The version is archived.");
+        }
+        if (version.getUnmetRequirements() > 0) {
+            throw ApiException.preconditionFailed("timetable_unmet_requirements",
+                    "This is a relaxed draft with " + version.getUnmetRequirements()
+                            + " unmet requirement(s); it cannot be published. Generate a complete timetable first.");
         }
         List<TimetableEntry> entries = entriesOf(id);
         TimetableValidator.Report report = validateAndStore(version, entries);
@@ -289,8 +296,8 @@ public class TimetableService {
         }
         long seed = input.seed() == null ? System.nanoTime() : input.seed();
         int attempts = input.attempts() == null ? 24 : Math.min(Math.max(input.attempts(), 4), 200);
-        TimetableGenerator.Result result = generator.generate(demands, locked, days, periods, classrooms, rules,
-                seed, attempts);
+        TimetableGenerator.Result result = generateWithSolver(version, demands, locked, days, periods, classrooms,
+                rules, seed, attempts, schoolId);
 
         for (TimetableEntry entry : entriesOf(versionId)) {
             if (!entry.isLocked()) {
@@ -320,6 +327,71 @@ public class TimetableService {
         version.setSolverScore(BigDecimal.valueOf(report.score()));
         versionRepository.save(version);
         return toView(version, all);
+    }
+
+    private static final String SETTING_SOLVER = "timetable.solver";
+    private static final String SOLVER_HEURISTIC = "heuristic";
+
+    private TimetableGenerator.Result generateWithSolver(TimetableVersion version, List<TimetableGenerator.Demand> demands,
+                                                        List<TimetableGenerator.Placement> locked, List<Integer> days,
+                                                        List<Integer> periods, List<UUID> classrooms, TimetableRules rules,
+                                                        long seed, int attempts, UUID schoolId) {
+        String configured = stringValue(tenantsApi.schoolSettings(schoolId).get(SETTING_SOLVER), "cp_sat");
+        boolean cpSat = !"heuristic".equals(configured) && TimetableCpSolver.available();
+        if (!cpSat || !locked.isEmpty()) {
+            // The heuristic keeps locked placements exactly as they are; the CP-SAT path falls back to
+            // it when the native library is unavailable or when locks must be preserved verbatim.
+            if (cpSat && !locked.isEmpty()) {
+                logFallback("locked entries present; using the heuristic generator");
+            }
+            return generator.generate(demands, locked, days, periods, classrooms, rules, seed, attempts);
+        }
+        List<TimetableCpSolver.Demand> cpDemands = new ArrayList<>();
+        for (TimetableGenerator.Demand demand : demands) {
+            cpDemands.add(new TimetableCpSolver.Demand(demand.classGroupId(), demand.streamId(), demand.subjectId(),
+                    demand.teacherMembershipId(), demand.periodsPerWeek()));
+        }
+        List<TimetableCpSolver.Placement> cpLocked = new ArrayList<>();
+        for (TimetableGenerator.Placement placement : locked) {
+            cpLocked.add(new TimetableCpSolver.Placement(placement.classGroupId(), placement.streamId(),
+                    placement.subjectId(), placement.teacherMembershipId(), placement.day(), placement.period(),
+                    placement.span()));
+        }
+        int timeLimit = attempts <= 0 ? 30 : Math.min(60, attempts);
+        TimetableCpSolver.Solution solution = cpSolver.solve(cpDemands, rules, days, cpLocked, timeLimit, seed);
+        version.setUnmetRequirements(solution.unmet().size());
+        if (solution.unmet().isEmpty()) {
+            version.setNote(null);
+        } else {
+            version.setNote("Relaxed draft: " + solution.unmet().size()
+                    + " requirement(s) could not be placed (" + solution.status() + ").");
+        }
+        List<RoomAssigner.Lesson> lessons = new ArrayList<>();
+        for (TimetableCpSolver.Placement placement : solution.placements()) {
+            lessons.add(new RoomAssigner.Lesson(placement.classGroupId(), placement.streamId(), placement.subjectId(),
+                    placement.teacherMembershipId(), placement.day(), placement.period(), placement.span()));
+        }
+        List<RoomAssigner.Assigned> assigned = RoomAssigner.assign(lessons, classrooms);
+        int roomsUnassigned = (int) RoomAssigner.unassigned(assigned);
+        List<TimetableGenerator.Placement> placements = new ArrayList<>();
+        for (RoomAssigner.Assigned entry : assigned) {
+            RoomAssigner.Lesson lesson = entry.lesson();
+            placements.add(new TimetableGenerator.Placement(lesson.classGroupId(), lesson.streamId(), lesson.subjectId(),
+                    lesson.teacherMembershipId(), entry.classroomId(), lesson.day(), lesson.period(), lesson.span()));
+        }
+        int placed = placements.size();
+        // Solver score: full marks when complete and roomed, minus gaps/unmet scaled like the validator's.
+        double score = placed == 0 ? 0.0
+                : 100.0 * placed / Math.max(1, demands.size() * 2) - (roomsUnassigned * 2.0) - (solution.unmet().size() * 5.0);
+        return new TimetableGenerator.Result(placements, seed, demands.size(), placed, roomsUnassigned, 1);
+    }
+
+    private String stringValue(Object value, String fallback) {
+        return value == null ? fallback : String.valueOf(value).trim();
+    }
+
+    private void logFallback(String reason) {
+        org.slf4j.LoggerFactory.getLogger(TimetableService.class).info("timetable.generate.fallback reason={}", reason);
     }
 
     // ----- published read -----

@@ -23,6 +23,7 @@ public class TimetableVersion extends TenantEntity {
     String note;
     Long solverSeed;
     BigDecimal solverScore;
+    int unmetRequirements = 0;
 
     @Column(name = "constraint_report", columnDefinition = "jsonb")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
@@ -94,6 +95,14 @@ public class TimetableVersion extends TenantEntity {
 
     public void setSolverScore(BigDecimal solverScore) {
         this.solverScore = solverScore;
+    }
+
+    public int getUnmetRequirements() {
+        return unmetRequirements;
+    }
+
+    public void setUnmetRequirements(int unmetRequirements) {
+        this.unmetRequirements = unmetRequirements;
     }
 
     public Map<String, Object> getConstraintReport() {

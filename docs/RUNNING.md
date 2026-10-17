@@ -72,8 +72,13 @@ login fails or reads come back empty.
 ## 4. Run the backend
 
 The `dev` profile is the default (`spring.profiles.default: dev`). Flyway validates and
-applies all migrations automatically on startup (current schema: v14). The app connects as
+applies all migrations automatically on startup (current schema: v16). The app connects as
 the non-owner `schoolsphere_app`; Flyway itself connects as the owner.
+
+The CP-SAT timetable engine (OR-Tools) extracts its native library into `java.io.tmpdir`
+the first time a timetable is generated. On a machine whose system temp directory is full
+or unwritable, set `JAVA_TOOL_OPTIONS` or pass `-Djava.io.tmpdir=D:\\Trixx\\tmp` (or any
+writable directory on a drive with free space) before starting the backend.
 
 Run it from the `backend/` directory:
 
