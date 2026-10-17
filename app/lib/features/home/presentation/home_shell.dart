@@ -12,6 +12,10 @@ import '../../../core/session/session.dart';
 import '../../academics/presentation/academics_screen.dart';
 import '../../cbe/presentation/cbe_screen.dart';
 import '../../communication/presentation/communication_screen.dart';
+import '../../hr/presentation/hr_screen.dart';
+import '../../inventory/presentation/inventory_screen.dart';
+import '../../library/presentation/library_screen.dart';
+import '../../transport/presentation/transport_screen.dart';
 import '../../elearning/presentation/elearning_screen.dart';
 import '../../examinations/presentation/examinations_screen.dart';
 import '../../finance/presentation/finance_screen.dart';
@@ -246,6 +250,45 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           group: s.people,
           keywords: const ['students', 'staff', 'people', 'directory'],
           page: const PeopleScreen(),
+        ),
+      NavItem(
+        id: ShellDestination.library,
+        label: 'Library',
+        icon: Icons.menu_book_outlined,
+        selectedIcon: Icons.menu_book,
+        group: s.people,
+        keywords: const ['library', 'books', 'catalogue'],
+        page: const LibraryScreen(),
+      ),
+      if (can('people.view'))
+        NavItem(
+          id: ShellDestination.hr,
+          label: 'HR',
+          icon: Icons.badge_outlined,
+          selectedIcon: Icons.badge,
+          group: s.people,
+          keywords: const ['hr', 'staff', 'leave', 'payroll'],
+          page: const HrScreen(),
+        ),
+      if (can('people.view'))
+        NavItem(
+          id: ShellDestination.inventory,
+          label: 'Inventory',
+          icon: Icons.inventory_2_outlined,
+          selectedIcon: Icons.inventory_2,
+          group: s.settings,
+          keywords: const ['inventory', 'stock', 'procurement'],
+          page: const InventoryScreen(),
+        ),
+      if (can('people.view'))
+        NavItem(
+          id: ShellDestination.transport,
+          label: 'Transport',
+          icon: Icons.directions_bus_outlined,
+          selectedIcon: Icons.directions_bus,
+          group: s.settings,
+          keywords: const ['transport', 'routes', 'vehicles', 'drivers'],
+          page: const TransportScreen(),
         ),
       if (can('people.view'))
         NavItem(
