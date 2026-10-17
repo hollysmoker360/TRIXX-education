@@ -181,6 +181,26 @@
   "@learn": {
     "description": ""
   },
+  "navWorkspace": "Eneo la kazi",
+  "@navWorkspace": {
+    "description": ""
+  },
+  "navTeachingLearning": "Ufundishaji na ujifunzaji",
+  "@navTeachingLearning": {
+    "description": ""
+  },
+  "navSchoolOperations": "Shughuli za shule",
+  "@navSchoolOperations": {
+    "description": ""
+  },
+  "navInsightsCommunication": "Maarifa na mawasiliano",
+  "@navInsightsCommunication": {
+    "description": ""
+  },
+  "navAdministration": "Utawala",
+  "@navAdministration": {
+    "description": ""
+  },
   "family": "Familia",
   "@family": {
     "description": ""
