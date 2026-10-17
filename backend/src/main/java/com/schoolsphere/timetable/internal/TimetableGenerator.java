@@ -2,10 +2,13 @@ package com.schoolsphere.timetable.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +16,10 @@ import org.springframework.stereotype.Component;
  * Heuristic timetable solver (spec 12.1): seeded greedy placement with randomized restarts and a
  * single-level repair pass. Deterministic for a given seed; full CP-SAT (OR-Tools) is a documented
  * follow-up (docs/adr).
+ *
+ * <p>Placement honours the school's {@link TimetableRules}: a double period never spans a break and
+ * a teacher is never given two separate lessons in adjacent periods, so the output always satisfies
+ * the consecutive-lesson rule that {@link TimetableValidator} re-checks independently.
  */
 @Component
 public class TimetableGenerator {
@@ -34,7 +41,7 @@ public class TimetableGenerator {
     }
 
     public Result generate(List<Demand> demands, List<Placement> locked, List<Integer> days, List<Integer> periods,
-                           List<UUID> classrooms, long seed, int attempts) {
+                           List<UUID> classrooms, TimetableRules rules, long seed, int attempts) {
         List<Demand> expanded = new ArrayList<>();
         for (Demand demand : demands) {
             for (int i = 0; i < demand.periodsPerWeek(); i++) {
@@ -50,12 +57,14 @@ public class TimetableGenerator {
         Solution best = null;
         for (int attempt = 0; attempt < attempts; attempt++) {
             Random random = new Random(seed + attempt);
-            Solution solution = tryBuild(expanded, locked, sortedDays, sortedPeriods, classrooms, random);
+            Solution solution = tryBuild(expanded, locked, sortedDays, sortedPeriods, classrooms, rules, random);
             attemptsUsed++;
             if (best == null || solution.betterThan(best)) {
                 best = solution;
             }
-            if (best.placed == expanded.size() && best.roomsUnassigned == 0) {
+            if (best.placed == expanded.size() && best.roomsUnassigned == 0 && best.longGaps == 0) {
+                // Only stop early on a timetable that is complete, fully roomed and free of long gaps;
+                // otherwise keep restarting so the gap objective can improve.
                 break;
             }
         }
@@ -67,8 +76,8 @@ public class TimetableGenerator {
     }
 
     private Solution tryBuild(List<Demand> lessons, List<Placement> locked, List<Integer> days,
-                              List<Integer> periods, List<UUID> classrooms, Random random) {
-        Grid grid = new Grid();
+                              List<Integer> periods, List<UUID> classrooms, TimetableRules rules, Random random) {
+        Grid grid = new Grid(rules);
         List<Token> tokens = new ArrayList<>();
         for (Placement placement : locked) {
             Token token = Token.from(placement);
@@ -82,17 +91,20 @@ public class TimetableGenerator {
                 teacherLoad.merge(demand.teacherMembershipId(), demand.periodsPerWeek(), Integer::sum);
             }
         }
-        order.sort((a, b) -> {
-            int byTeacher = Integer.compare(
-                    teacherLoad.getOrDefault(b.teacherMembershipId(), 0),
-                    teacherLoad.getOrDefault(a.teacherMembershipId(), 0));
-            return byTeacher != 0 ? byTeacher : random.nextInt(3) - 1;
-        });
+        // Shuffle first, then stably order the busiest teachers first. A comparator that consulted
+        // the random source directly would not be a total order and can fail TimSort outright.
+        Collections.shuffle(order, random);
+        order.sort(Comparator.comparingInt(
+                (Demand demand) -> -teacherLoad.getOrDefault(demand.teacherMembershipId(), 0)));
 
         List<Token> unplaced = new ArrayList<>();
         for (Demand demand : order) {
             Token token = Token.of(demand);
-            if (!assignBestSlot(grid, token, days, periods, classrooms, random)) {
+            if (assignBestSlot(grid, token, days, periods, classrooms, random)) {
+                // Placed lessons must be kept: without this the solver reported only its locked
+                // entries and every generated timetable came back empty.
+                tokens.add(token);
+            } else {
                 unplaced.add(token);
             }
         }
@@ -110,7 +122,7 @@ public class TimetableGenerator {
                 finalTokens.add(token);
             }
         }
-        return new Solution(finalTokens, finalTokens.size(), roomsFinal);
+        return new Solution(finalTokens, finalTokens.size(), roomsFinal, grid.longGapCount());
     }
 
     private boolean assignBestSlot(Grid grid, Token token, List<Integer> days, List<Integer> periods,
@@ -261,9 +273,17 @@ public class TimetableGenerator {
         private final Map<String, Map<Integer, Token>> classSlots = new HashMap<>();
         private final Map<UUID, Map<Integer, Token>> teacherSlots = new HashMap<>();
         private final Map<UUID, Map<Integer, Token>> roomSlots = new HashMap<>();
+        private final TimetableRules rules;
+
+        Grid(TimetableRules rules) {
+            this.rules = rules == null ? TimetableRules.contiguous(0) : rules;
+        }
 
         boolean free(Token token, int day, int period, UUID room) {
             if (!freeForClassOnly(token, day, period)) {
+                return false;
+            }
+            if (!fitsOneSession(token, period)) {
                 return false;
             }
             for (int s = period; s < period + token.span; s++) {
@@ -276,7 +296,65 @@ public class TimetableGenerator {
                     return false;
                 }
             }
+            return teacherAdjacencyFree(token, day, period);
+        }
+
+        /** Every slot of the lesson must be a teaching period and a double must not cross a break. */
+        boolean fitsOneSession(Token token, int period) {
+            if (!rules.hasLayout()) {
+                return true;
+            }
+            for (int s = period; s < period + token.span; s++) {
+                if (!rules.isTeachingPeriod(s)) {
+                    return false;
+                }
+                if (s > period && !rules.inSameSession(s - 1, s)) {
+                    return false;
+                }
+            }
             return true;
+        }
+
+        /**
+         * The consecutive-lesson rule: the teacher must not already be teaching in the period
+         * immediately before or after this lesson. A double period is exempt because both halves
+         * belong to the same lesson. The heuristic solver enforces the strict limit only; a relaxed
+         * per-teacher override is satisfied by the validator, not exploited here.
+         */
+        boolean teacherAdjacencyFree(Token token, int day, int period) {
+            if (token.teacherMembershipId == null || !rules.hasLayout()
+                    || rules.maxConsecutiveFor(token.teacherMembershipId) > 1) {
+                return true;
+            }
+            Map<Integer, Token> slots = teacherSlots.getOrDefault(token.teacherMembershipId, Map.of());
+            int before = period - 1;
+            int after = period + token.span;
+            if (rules.inSameSession(before, period) && slots.containsKey(slotKey(day, before))) {
+                return false;
+            }
+            return !(rules.inSameSession(period + token.span - 1, after) && slots.containsKey(slotKey(day, after)));
+        }
+
+        /**
+         * Free runs longer than the acceptable gap, summed over every teacher and day. Used as the
+         * solver's final tie-break so a complete timetable also keeps teachers' days compact.
+         */
+        int longGapCount() {
+            if (!rules.hasLayout()) {
+                return 0;
+            }
+            List<List<Integer>> sessions = rules.sessions();
+            int count = 0;
+            for (Map<Integer, Token> slots : teacherSlots.values()) {
+                Map<Integer, Set<Integer>> periodsByDay = new HashMap<>();
+                for (int key : slots.keySet()) {
+                    periodsByDay.computeIfAbsent(key / 100, day -> new HashSet<>()).add(key % 100);
+                }
+                for (Set<Integer> periods : periodsByDay.values()) {
+                    count += TimetableRules.countLongGaps(periods, sessions);
+                }
+            }
+            return count;
         }
 
         boolean freeForClassOnly(Token token, int day, int period) {
@@ -300,6 +378,22 @@ public class TimetableGenerator {
                     Token byTeacher = teacherSlots.getOrDefault(token.teacherMembershipId, Map.of()).get(key);
                     if (byTeacher != null && !blockers.contains(byTeacher)) {
                         blockers.add(byTeacher);
+                    }
+                }
+            }
+            if (token.teacherMembershipId != null && rules.hasLayout()
+                    && rules.maxConsecutiveFor(token.teacherMembershipId) <= 1) {
+                Map<Integer, Token> slots = teacherSlots.getOrDefault(token.teacherMembershipId, Map.of());
+                for (int neighbour : new int[] {period - 1, period + token.span}) {
+                    boolean adjacent = neighbour < period
+                            ? rules.inSameSession(neighbour, period)
+                            : rules.inSameSession(period + token.span - 1, neighbour);
+                    if (!adjacent) {
+                        continue;
+                    }
+                    Token occupant = slots.get(slotKey(day, neighbour));
+                    if (occupant != null && !blockers.contains(occupant)) {
+                        blockers.add(occupant);
                     }
                 }
             }
@@ -338,22 +432,32 @@ public class TimetableGenerator {
         final List<Token> placements;
         final int placed;
         final int roomsUnassigned;
+        final int longGaps;
 
         Solution(List<Token> placements, int placed) {
             this(placements, placed, 0);
         }
 
         Solution(List<Token> placements, int placed, int roomsUnassigned) {
+            this(placements, placed, roomsUnassigned, 0);
+        }
+
+        Solution(List<Token> placements, int placed, int roomsUnassigned, int longGaps) {
             this.placements = placements;
             this.placed = placed;
             this.roomsUnassigned = roomsUnassigned;
+            this.longGaps = longGaps;
         }
 
         boolean betterThan(Solution other) {
             if (placed != other.placed) {
                 return placed > other.placed;
             }
-            return roomsUnassigned < other.roomsUnassigned;
+            if (roomsUnassigned != other.roomsUnassigned) {
+                return roomsUnassigned < other.roomsUnassigned;
+            }
+            // Soft goal (spec 12.1): avoid gaps longer than two periods in a teacher's day.
+            return longGaps < other.longGaps;
         }
     }
 }

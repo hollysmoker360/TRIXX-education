@@ -4,9 +4,11 @@ import com.schoolsphere.academics.api.AcademicsApi;
 import com.schoolsphere.common.error.ApiException;
 import com.schoolsphere.common.tenant.TenantContext;
 import com.schoolsphere.common.tenant.TenantScoped;
+import com.schoolsphere.tenants.api.TenantsApi;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -28,6 +30,7 @@ public class TimetableService {
 
     private static final int DEFAULT_PERIODS_PER_WEEK = 3;
     private static final List<Integer> DEFAULT_DAYS = List.of(1, 2, 3, 4, 5);
+    private static final List<Integer> DEFAULT_PERIOD_SEQS = List.of(1, 2, 3, 4, 5, 6, 7, 8);
 
     private final TimetableVersionRepository versionRepository;
     private final TimetableEntryRepository entryRepository;
@@ -35,18 +38,20 @@ public class TimetableService {
     private final TimetableGenerator generator;
     private final com.schoolsphere.people.api.PeopleApi peopleApi;
     private final AcademicsApi academicsApi;
+    private final TenantsApi tenantsApi;
     private final JdbcTemplate jdbc;
 
     public TimetableService(TimetableVersionRepository versionRepository, TimetableEntryRepository entryRepository,
                             TimetableValidator validator, TimetableGenerator generator,
                             com.schoolsphere.people.api.PeopleApi peopleApi, AcademicsApi academicsApi,
-                            JdbcTemplate jdbc) {
+                            TenantsApi tenantsApi, JdbcTemplate jdbc) {
         this.versionRepository = versionRepository;
         this.entryRepository = entryRepository;
         this.validator = validator;
         this.generator = generator;
         this.peopleApi = peopleApi;
         this.academicsApi = academicsApi;
+        this.tenantsApi = tenantsApi;
         this.jdbc = jdbc;
     }
 
@@ -204,7 +209,7 @@ public class TimetableService {
         TimetableVersion version = requireDraftVersion(versionId);
         validateEntryInput(input);
         List<TimetableEntry> existing = entriesOf(versionId);
-        checkClash(input, existing, null);
+        checkClash(input, existing, null, rulesFor(schoolId(), version.getAcademicYearId()));
         TimetableEntry entry = new TimetableEntry();
         entry.setSchoolId(schoolId());
         entry.setVersionId(version.getId());
@@ -219,9 +224,9 @@ public class TimetableService {
         UUID schoolId = schoolId();
         TimetableEntry entry = entryRepository.findBySchoolIdAndIdAndDeletedAtIsNull(schoolId, entryId)
                 .orElseThrow(() -> ApiException.notFound("entry_not_found", "Timetable entry not found."));
-        requireDraftVersion(entry.getVersionId());
+        TimetableVersion version = requireDraftVersion(entry.getVersionId());
         validateEntryInput(input);
-        checkClash(input, entriesOf(entry.getVersionId()), entryId);
+        checkClash(input, entriesOf(entry.getVersionId()), entryId, rulesFor(schoolId, version.getAcademicYearId()));
         applyInput(entry, input);
         entry.setUpdatedBy(TenantContext.actorUserId());
         entry = entryRepository.save(entry);
@@ -245,7 +250,11 @@ public class TimetableService {
         List<Integer> days = input.days() == null || input.days().isEmpty()
                 ? DEFAULT_DAYS
                 : input.days().stream().distinct().filter(d -> d >= 1 && d <= 7).sorted().toList();
-        List<Integer> periods = periodsFor(schoolId, version.getAcademicYearId());
+        TimetableRules schoolRules = rulesFor(schoolId, version.getAcademicYearId());
+        TimetableRules rules = schoolRules.withTeachingDays(new HashSet<>(days));
+        List<Integer> periods = schoolRules.hasLayout()
+                ? schoolRules.teachingPeriods().stream().sorted().toList()
+                : DEFAULT_PERIOD_SEQS;
         List<UUID> classrooms = classroomsFor(schoolId);
         Map<UUID, UUID> membershipByUser = membershipByUser(schoolId);
 
@@ -263,6 +272,7 @@ public class TimetableService {
             throw ApiException.badRequest("no_assignments",
                     "No teacher assignments exist for this term; add them before generating a timetable.");
         }
+        checkTeacherCapacity(demands, rules);
         List<TimetableGenerator.Placement> locked = new ArrayList<>();
         for (TimetableEntry entry : entriesOf(versionId)) {
             if (entry.isLocked()) {
@@ -273,7 +283,7 @@ public class TimetableService {
         }
         long seed = input.seed() == null ? System.nanoTime() : input.seed();
         int attempts = input.attempts() == null ? 24 : Math.min(Math.max(input.attempts(), 4), 200);
-        TimetableGenerator.Result result = generator.generate(demands, locked, days, periods, classrooms,
+        TimetableGenerator.Result result = generator.generate(demands, locked, days, periods, classrooms, rules,
                 seed, attempts);
 
         for (TimetableEntry entry : entriesOf(versionId)) {
@@ -330,8 +340,8 @@ public class TimetableService {
 
     private TimetableValidator.Report validateAndStore(TimetableVersion version, List<TimetableEntry> entries) {
         UUID schoolId = schoolId();
-        Set<Integer> validPeriods = new HashSet<>(periodsFor(schoolId, version.getAcademicYearId()));
-        TimetableValidator.Report report = validator.validate(entries, validPeriods, teacherWeeklyLimits(schoolId));
+        TimetableRules rules = rulesFor(schoolId, version.getAcademicYearId());
+        TimetableValidator.Report report = validator.validate(entries, rules, teacherWeeklyLimits(schoolId));
         Map<String, Object> stored = new LinkedHashMap<>();
         stored.put("hardCount", report.hardCount());
         stored.put("softCount", report.softCount());
@@ -352,7 +362,7 @@ public class TimetableService {
         return report;
     }
 
-    private void checkClash(EntryInput input, List<TimetableEntry> existing, UUID ignoreEntryId) {
+    private void checkClash(EntryInput input, List<TimetableEntry> existing, UUID ignoreEntryId, TimetableRules rules) {
         TimetableEntry probe = new TimetableEntry();
         probe.setId(ignoreEntryId == null ? UUID.randomUUID() : ignoreEntryId);
         applyInput(probe, input);
@@ -370,6 +380,18 @@ public class TimetableService {
             if (probe.getClassroomId() != null && probe.getClassroomId().equals(entry.getClassroomId())) {
                 throw ApiException.conflict("room_clash", "The room is already in use in this slot.");
             }
+        }
+        // Manual edits and swaps are checked against the consecutive-lesson rule immediately so the
+        // editor can report the violation instead of saving it.
+        List<TimetableEntry> candidate = new ArrayList<>();
+        for (TimetableEntry entry : existing) {
+            if (!entry.getId().equals(ignoreEntryId)) {
+                candidate.add(entry);
+            }
+        }
+        candidate.add(probe);
+        for (TimetableValidator.Issue issue : validator.consecutiveIssues(candidate, rules)) {
+            throw ApiException.conflict(issue.kind(), issue.message());
         }
     }
 
@@ -462,15 +484,102 @@ public class TimetableService {
         return year;
     }
 
-    private List<Integer> periodsFor(UUID schoolId, UUID academicYearId) {
-        List<Integer> periods = jdbc.query(
-                "SELECT seq FROM timetable_period WHERE school_id = ? AND (academic_year_id = ? OR academic_year_id IS NULL) "
-                        + "AND NOT is_break AND deleted_at IS NULL ORDER BY seq",
-                (rs, i) -> rs.getInt("seq"), schoolId, academicYearId);
-        if (periods.isEmpty()) {
-            return List.of(1, 2, 3, 4, 5, 6, 7, 8);
+    /**
+     * Builds the period geometry and the school's consecutive-lesson rule. Breaks are read from the
+     * same table as teaching periods, so two periods are only adjacent when nothing sits between
+     * them, and a double period can never be placed across a break (spec 12.1).
+     */
+    private TimetableRules rulesFor(UUID schoolId, UUID academicYearId) {
+        Map<Integer, Boolean> bySeq = new LinkedHashMap<>();
+        jdbc.query("SELECT seq, is_break FROM timetable_period WHERE school_id = ? "
+                        + "AND (academic_year_id = ? OR academic_year_id IS NULL) AND deleted_at IS NULL "
+                        + "ORDER BY seq, (academic_year_id IS NULL)",
+                rs -> {
+                    while (rs.next()) {
+                        bySeq.putIfAbsent(rs.getInt("seq"), rs.getBoolean("is_break"));
+                    }
+                }, schoolId, academicYearId);
+        Set<Integer> teaching = new HashSet<>();
+        Set<Long> adjacentPairs = new HashSet<>();
+        Integer previousTeaching = null;
+        for (Map.Entry<Integer, Boolean> period : bySeq.entrySet()) {
+            if (Boolean.TRUE.equals(period.getValue())) {
+                previousTeaching = null;
+                continue;
+            }
+            teaching.add(period.getKey());
+            if (previousTeaching != null) {
+                adjacentPairs.add(TimetableRules.pairKey(previousTeaching, period.getKey()));
+            }
+            previousTeaching = period.getKey();
         }
-        return periods;
+        Map<String, Object> settings = tenantsApi.schoolSettings(schoolId);
+        return new TimetableRules(teaching, adjacentPairs,
+                intSet(settings.get(TimetableRules.SETTING_TEACHING_DAYS), TimetableRules.DEFAULT_TEACHING_DAYS),
+                intValue(settings.get(TimetableRules.SETTING_MAX_CONSECUTIVE), TimetableRules.DEFAULT_MAX_CONSECUTIVE_PERIODS),
+                teacherConsecutiveOverrides(settings));
+    }
+
+    private Set<Integer> intSet(Object value, Set<Integer> fallback) {
+        if (!(value instanceof Collection<?> values)) {
+            return fallback;
+        }
+        Set<Integer> resolved = new HashSet<>();
+        for (Object item : values) {
+            if (item instanceof Number number && number.intValue() >= 1 && number.intValue() <= 7) {
+                resolved.add(number.intValue());
+            }
+        }
+        return resolved.isEmpty() ? fallback : resolved;
+    }
+
+    private int intValue(Object value, int fallback) {
+        return value instanceof Number number ? Math.max(1, number.intValue()) : fallback;
+    }
+
+    private Map<UUID, Integer> teacherConsecutiveOverrides(Map<String, Object> settings) {
+        Object value = settings.get(TimetableRules.SETTING_TEACHER_MAX_CONSECUTIVE);
+        if (!(value instanceof Map<?, ?> entries)) {
+            return Map.of();
+        }
+        Map<UUID, Integer> overrides = new HashMap<>();
+        for (Map.Entry<?, ?> entry : entries.entrySet()) {
+            if (!(entry.getValue() instanceof Number number) || number.intValue() < 1) {
+                continue;
+            }
+            try {
+                overrides.put(UUID.fromString(String.valueOf(entry.getKey())), number.intValue());
+            } catch (IllegalArgumentException ignored) {
+                // A malformed key is not a reason to fail generation; the school default still applies.
+            }
+        }
+        return overrides;
+    }
+
+    /**
+     * Instant, readable feasibility check before the solver runs: a teacher whose weekly load
+     * exceeds what the consecutive-lesson rule can physically place can never be scheduled, so the
+     * caller is told which limit to change instead of waiting for an incomplete timetable.
+     */
+    private void checkTeacherCapacity(List<TimetableGenerator.Demand> demands, TimetableRules rules) {
+        if (!rules.hasLayout()) {
+            return;
+        }
+        Map<UUID, Integer> demanded = new HashMap<>();
+        for (TimetableGenerator.Demand demand : demands) {
+            if (demand.teacherMembershipId() != null) {
+                demanded.merge(demand.teacherMembershipId(), demand.periodsPerWeek(), Integer::sum);
+            }
+        }
+        int capacity = rules.weeklyCapacityInPeriods();
+        for (Map.Entry<UUID, Integer> load : demanded.entrySet()) {
+            if (load.getValue() > capacity) {
+                throw ApiException.badRequest("teacher_capacity",
+                        "A teacher is assigned " + load.getValue() + " periods but at most " + capacity
+                                + " can be placed in a week without back-to-back lessons. Add double periods, "
+                                + "reduce the load, or relax " + TimetableRules.SETTING_MAX_CONSECUTIVE + ".");
+            }
+        }
     }
 
     private List<UUID> classroomsFor(UUID schoolId) {

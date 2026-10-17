@@ -466,3 +466,49 @@ Related: [ARCHITECTURE.md](ARCHITECTURE.md) · [SECURITY.md](SECURITY.md) · [SY
   - `flutter analyze` stays clean and the widget tests still pass unmodified — the upgrades are
     additive optional parameters, not signature changes.
 
+## ADR-018 — Consecutive-lesson rule: a teacher may not teach back-to-back unless it is a double
+
+- **Status:** Accepted (implemented 2026-10-17)
+- **Context:** Schools reported that the generator happily produced timetables where a teacher taught
+  two different classes in adjacent periods. Staff consider that unworkable: back-to-back periods are
+  only acceptable when the two halves belong to one double-period lesson. The handbook's constraint
+  form is `busy[t] + busy[t+1] <= 1 + doubleStartsAt[t]` for every teacher and every adjacent pair
+  inside the same session.
+- **Decision:**
+  - **Sessions, not just periods.** `timetable_period` rows flagged `is_break` end a session, so two
+    periods are adjacent only when nothing sits between them in the ordered period list. A double
+    period can never be placed across a break or lunch (new hard issue `double_spans_break`), and a
+    lesson either side of a break is not "consecutive".
+  - **The rule is enforced twice.** `TimetableValidator` reports `teacher_consecutive` as a hard issue
+    by sweeping each teacher's day into runs of touching occupied slots and counting distinct lessons
+    per run: one double period in a run is a single lesson and is legal, while a double followed by a
+    single, or two doubles in a row, is not. `TimetableGenerator` refuses a slot whose preceding or
+    following period already holds a lesson for that teacher, and `TimetableService.checkClash` rejects
+    a manual edit or swap with the same message the editor can show.
+  - **Strictness is a school setting, not code.** `school.settings` carries
+    `timetable.maxConsecutivePeriods` (default 1), the per-teacher override map
+    `timetable.teacherMaxConsecutivePeriods`, and `timetable.teachingDays`. This follows the existing
+    `chat.directMessagesEnabled` convention, so no migration or people-module change is needed.
+  - **Instant capacity pre-check.** Before solving, `TimetableService` compares each teacher's demanded
+    periods with `TimetableRules.weeklyCapacityInPeriods()`, the exact maximum placeable under the rule
+    (a four-slot session holds 3 periods with doubles or 2 without, so an eight-period day split by
+    lunch holds 6 a day, 30 a week). Exceeding it fails fast with `teacher_capacity` and the setting to
+    change, instead of returning a half-empty timetable.
+  - **Gap goal.** The handbook's "few gaps in a teacher's day" objective is replaced by "avoid gaps
+    longer than two periods": `teacher_long_gap` is a *soft* issue, gaps are measured inside a session
+    (a break is not a gap), and the generator's tie-break prefers solutions with fewer long gaps.
+  - Full CP-SAT/OR-Tools solving remains the documented follow-up ([ADR-003](DECISIONS.md)); the rule,
+    the capacity bound and the gap objective are written so the same `TimetableRules` feeds either
+    solver.
+- **Consequences:**
+  - A generated timetable now satisfies the rule by construction and the validator re-derives it
+    independently, so the two implementations cannot share a bug.
+  - **Bug found and fixed:** `TimetableGenerator` never added successfully placed lessons to its
+    result list, so `generate` returned only locked placements: an empty timetable in production, and
+    a crash-free failure that no existing test covered. Placed tokens are now kept, the comparison that
+    ordered teachers no longer consults the random source (it was not a total order and could fail
+    `List.sort`), and `TimetableGeneratorTest` asserts the invariant that the validator finds no hard
+    violation in generated output.
+  - Relaxed per-teacher limits are honoured by the validator and the capacity bound, but the heuristic
+    generator always enforces the strict limit, which is conservative rather than wrong.
+

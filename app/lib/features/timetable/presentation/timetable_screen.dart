@@ -52,6 +52,12 @@ class TimetableScreen extends ConsumerStatefulWidget {
 class _TimetableScreenState extends ConsumerState<TimetableScreen> {
   int _day = DateTime.now().weekday.clamp(1, 5);
 
+  /// Latest validation report for the version being managed (spec 12.1). Hard conflicts block
+  /// publishing; soft entries are workload and gap guidance.
+  Map<String, dynamic>? _report;
+
+  bool get _hasReportIssues => (_report?['issues'] as List?)?.isNotEmpty ?? false;
+
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
@@ -133,6 +139,11 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                       ),
                     ),
             ),
+            if (_canManage() && _hasReportIssues)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: _ConflictPanel(report: _report!),
+              ),
             if (_canManage())
               _ManagementSection(
                 versions: versions.valueOrNull ?? const <Map<String, dynamic>>[],
@@ -223,6 +234,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
       'days': <int>[1, 2, 3, 4, 5],
     });
     if (!mounted) return;
+    setState(() => _report = null);
     messenger.showSnackBar(SnackBar(content: Text(s.timetableGenerated)));
     ref.invalidate(_publishedProvider);
   }
@@ -234,9 +246,18 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     final versions = _versions;
     if (versions.isEmpty) return;
     final version = versions.first;
-    await api.post('/api/v1/timetable/versions/${version['id']}/validate');
+    final report = await api.post('/api/v1/timetable/versions/${version['id']}/validate')
+        as Map<String, dynamic>;
     if (!mounted) return;
+    setState(() => _report = report);
     messenger.showSnackBar(SnackBar(content: Text(s.validationComplete)));
+  }
+
+  Future<void> _refreshReport(String versionId) async {
+    final api = ref.read(apiClientProvider);
+    final report = await api.post('/api/v1/timetable/versions/$versionId/validate')
+        as Map<String, dynamic>;
+    if (mounted) setState(() => _report = report);
   }
 
   Future<void> _publish() async {
@@ -246,10 +267,19 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
     final versions = _versions;
     if (versions.isEmpty) return;
     final version = versions.first;
-    await api.post('/api/v1/timetable/versions/${version['id']}/publish');
-    if (!mounted) return;
-    messenger.showSnackBar(SnackBar(content: Text(s.timetablePublished)));
-    ref.invalidate(_publishedProvider);
+    try {
+      await api.post('/api/v1/timetable/versions/${version['id']}/publish');
+      if (!mounted) return;
+      setState(() => _report = null);
+      messenger.showSnackBar(SnackBar(content: Text(s.timetablePublished)));
+      ref.invalidate(_publishedProvider);
+    } on ApiProblem catch (e) {
+      // Publishing is refused while hard conflicts remain, so show the reasons rather than a bare
+      // failure (spec 12.1: the editor reports the violations).
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(e.detail)));
+      await _refreshReport('${version['id']}');
+    }
   }
 
   Future<void> _archive() async {
@@ -351,6 +381,47 @@ class _ManagementSection extends ConsumerWidget {
                   );
                 },
               ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Validation report for the version being managed (spec 12.1). Hard conflicts block publishing
+/// and carry an error icon; soft entries are workload and gap guidance. Messages come from the
+/// server so the editor shows the same wording the API returns.
+class _ConflictPanel extends StatelessWidget {
+  const _ConflictPanel({required this.report});
+
+  final Map<String, dynamic> report;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final theme = Theme.of(context);
+    final issues = (report['issues'] as List? ?? const []).cast<Map<String, dynamic>>();
+    final hard = (report['hardCount'] as num?)?.toInt() ?? 0;
+    final soft = (report['softCount'] as num?)?.toInt() ?? 0;
+    return SectionCard(
+      title: '${s.conflicts} · $hard / $soft',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final issue in issues)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                issue['severity'] == 'hard'
+                    ? Icons.error_outline
+                    : Icons.warning_amber_outlined,
+                color: issue['severity'] == 'hard'
+                    ? theme.colorScheme.error
+                    : Colors.orange.shade800,
+              ),
+              title: Text('${issue['message'] ?? ''}'),
+              subtitle: Text('${issue['kind'] ?? ''}'),
             ),
         ],
       ),
