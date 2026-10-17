@@ -184,6 +184,13 @@ public class DemoSeeder implements ApplicationRunner {
         Actor sarah = actors.get("sarah");
 
         AcademicService.YearView year = as(schoolId, principal, () -> {
+            AcademicService.YearView existing = academicService.listYears().stream()
+                    .filter(y -> "2026".equals(y.name()))
+                    .findFirst()
+                    .orElse(null);
+            if (existing != null) {
+                return existing;
+            }
             AcademicService.YearView created = academicService.createYear("2026", LocalDate.of(2026, 1, 5),
                     LocalDate.of(2026, 11, 27), true);
             academicService.createTerm(created.id(), "Term 1", 1, LocalDate.of(2026, 1, 5),
@@ -192,9 +199,17 @@ public class DemoSeeder implements ApplicationRunner {
                     LocalDate.of(2026, 8, 7), false);
             return created;
         });
-        AcademicService.TermView term3 = as(schoolId, principal,
-                () -> academicService.createTerm(year.id(), "Term 3", 3, LocalDate.of(2026, 8, 31),
-                        LocalDate.of(2026, 11, 27), true));
+        AcademicService.TermView term3 = as(schoolId, principal, () -> {
+            AcademicService.TermView existing = academicService.listTerms(year.id()).stream()
+                    .filter(t -> t.seq() == 3)
+                    .findFirst()
+                    .orElse(null);
+            if (existing != null) {
+                return existing;
+            }
+            return academicService.createTerm(year.id(), "Term 3", 3, LocalDate.of(2026, 8, 31),
+                    LocalDate.of(2026, 11, 27), true);
+        });
 
         Map<String, AcademicService.DepartmentView> departments = as(schoolId, principal, () -> {
             Map<String, AcademicService.DepartmentView> map = new LinkedHashMap<>();

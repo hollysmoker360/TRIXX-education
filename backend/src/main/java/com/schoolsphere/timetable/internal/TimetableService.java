@@ -170,7 +170,7 @@ public class TimetableService {
                 .ifPresent(other -> {
                     other.setState("archived");
                     other.setArchivedAt(Instant.now());
-                    versionRepository.save(other);
+                    versionRepository.saveAndFlush(other);
                 });
         version.setState("published");
         version.setPublishedAt(Instant.now());
