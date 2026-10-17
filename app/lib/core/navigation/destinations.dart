@@ -21,6 +21,7 @@ abstract final class ShellDestination {
   static const cbe = 'cbe';
   static const elearning = 'elearning';
   static const examinations = 'examinations';
+  static const studentSuccess = 'studentSuccess';
   static const reports = 'reports';
   static const resources = 'resources';
   static const tasks = 'tasks';
