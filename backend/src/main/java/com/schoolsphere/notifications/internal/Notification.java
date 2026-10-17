@@ -45,6 +45,14 @@ public class Notification {
     @Column(name = "state", nullable = false)
     private String state = "pending";
 
+    /** When set in the future the row is scheduled: hidden from the inbox and released when due. */
+    @Column(name = "due_at")
+    private Instant dueAt;
+
+    /** Idempotency key (occurrence, user, offset, channel); unique per school when present. */
+    @Column(name = "dedupe_key")
+    private String dedupeKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -130,6 +138,22 @@ public class Notification {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public Instant getDueAt() {
+        return dueAt;
+    }
+
+    public void setDueAt(Instant dueAt) {
+        this.dueAt = dueAt;
+    }
+
+    public String getDedupeKey() {
+        return dedupeKey;
+    }
+
+    public void setDedupeKey(String dedupeKey) {
+        this.dedupeKey = dedupeKey;
     }
 
     public Instant getCreatedAt() {

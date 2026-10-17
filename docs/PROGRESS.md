@@ -17,8 +17,8 @@ Live status by area. Markers: ✅ done & verified on disk · 🟡 partial / in p
 | messaging (channels + messages, STOMP WebSocket) | ✅ | `messaging/…`, `ChatWebSocketConfig` endpoint `/ws` |
 | lessons (Jitsi conferencing rooms) | ✅ | `lessons/…`, deterministic room names |
 | attendance (sessions, events, PDF/CSV reports) | ✅ | `attendance/…`, OpenPDF |
-| notifications (in-app + transactional outbox worker) | ✅ | `OutboxWorker` with `FOR UPDATE SKIP LOCKED`, backoff |
-| timetable (versions, entries, heuristic generator + independent validator) | ✅ | generator enforces the no-consecutive-lessons rule and the gap objective; validator re-derives them independently ([ADR-003](DECISIONS.md), [ADR-018](DECISIONS.md)) |
+| notifications (in-app + transactional outbox worker) | ✅ | `OutboxWorker` with `FOR UPDATE SKIP LOCKED`, backoff; scheduled reminders released when due by `ScheduledNotificationReleaser` ([ADR-019](DECISIONS.md)) |
+| timetable (versions, entries, heuristic generator + independent validator) | ✅ | generator enforces the no-consecutive-lessons rule and the gap objective; validator re-derives them independently ([ADR-003](DECISIONS.md), [ADR-018](DECISIONS.md)); publishing expands the grid into dated occurrences and schedules the two-minute reminders ([ADR-019](DECISIONS.md)) |
 | sync (push/pull, change feed, devices) | ✅ | `sync/…`, `ChangeFeedReader`, `sync_operation` idempotency |
 | audit (append-only audit log + read API, data-subject export) | ✅ | `AuditLogServiceImpl`, `AuditLogQueryService`, `DataSubjectService` |
 | feature flags (table-backed, per-school override + global default) | ✅ | `featureflags/…` reads `feature_flag` (spec 3.2) |
@@ -34,7 +34,7 @@ wrapper is committed; run with `D:\Trixx\tools\maven\bin\mvn.cmd -Dmaven.repo.lo
 
 | Status | Notes |
 |--------|-------|
-| ✅ | `V1`–`V14` present: extensions, auth/users, tenants, academics, people, learning, tasks+messaging, attendance, timetable, notifications+audit+sync, RLS policies + grants (`V11`), change-feed triggers (`V12`), subscriptions/billing + `feature_flag` isolation (`V13`), `feature_flag.version` column (`V14`). |
+| ✅ | `V1`–`V15` present: extensions, auth/users, tenants, academics, people, learning, tasks+messaging, attendance, timetable, notifications+audit+sync, RLS policies + grants (`V11`), change-feed triggers (`V12`), subscriptions/billing + `feature_flag` isolation (`V13`), `feature_flag.version` column (`V14`), lesson occurrences + scheduled notifications (`V15`). |
 
 ## Brand and design system (`app/lib/core`)
 

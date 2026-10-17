@@ -36,6 +36,7 @@ public class TimetableService {
     private final TimetableEntryRepository entryRepository;
     private final TimetableValidator validator;
     private final TimetableGenerator generator;
+    private final LessonScheduleService lessonScheduleService;
     private final com.schoolsphere.people.api.PeopleApi peopleApi;
     private final AcademicsApi academicsApi;
     private final TenantsApi tenantsApi;
@@ -43,12 +44,14 @@ public class TimetableService {
 
     public TimetableService(TimetableVersionRepository versionRepository, TimetableEntryRepository entryRepository,
                             TimetableValidator validator, TimetableGenerator generator,
+                            LessonScheduleService lessonScheduleService,
                             com.schoolsphere.people.api.PeopleApi peopleApi, AcademicsApi academicsApi,
                             TenantsApi tenantsApi, JdbcTemplate jdbc) {
         this.versionRepository = versionRepository;
         this.entryRepository = entryRepository;
         this.validator = validator;
         this.generator = generator;
+        this.lessonScheduleService = lessonScheduleService;
         this.peopleApi = peopleApi;
         this.academicsApi = academicsApi;
         this.tenantsApi = tenantsApi;
@@ -165,6 +168,9 @@ public class TimetableService {
         version.setState("published");
         version.setPublishedAt(Instant.now());
         versionRepository.save(version);
+        // Rolling the timetable forward turns it into dated lessons and schedules the reminders
+        // (spec 12.2); the previous version's future lessons and pending reminders are withdrawn.
+        lessonScheduleService.publishSchedule(version.getId());
         return toView(version, entries);
     }
 

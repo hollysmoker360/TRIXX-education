@@ -163,6 +163,12 @@ user prefix `/user`). See [ADR-005](DECISIONS.md).
 | `POST /versions`, `PATCH /versions/{id}`, `DELETE /versions/{id}`, `POST /versions/{id}/copy` | `timetable.edit` |
 | `POST /versions/{id}/generate`, `POST /versions/{id}/entries`, `PATCH /entries/{entryId}`, `DELETE /entries/{entryId}` | `timetable.edit` |
 | `POST /versions/{id}/publish`, `POST /versions/{id}/archive` | `timetable.publish` |
+| `GET /occurrences` (`?classGroupId=&teacherMembershipId=&from=&to=`) | `timetable.view` |
+| `POST /versions/{id}/schedule`, `POST /versions/{id}/schedule/roll-forward` | `timetable.publish` |
+
+`GET /occurrences` returns the dated lessons expanded from a published timetable. Publishing
+rolls the timetable forward automatically and schedules the two-minute lesson reminders, so this
+endpoint is the day/agenda view for a class or a teacher ([ADR-019](DECISIONS.md)).
 
 ### sync (`/api/v1/sync`)
 | Method & path | Permission |

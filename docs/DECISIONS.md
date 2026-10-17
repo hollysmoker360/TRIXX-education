@@ -512,3 +512,52 @@ Related: [ARCHITECTURE.md](ARCHITECTURE.md) · [SECURITY.md](SECURITY.md) · [SY
   - Relaxed per-teacher limits are honoured by the validator and the capacity bound, but the heuristic
     generator always enforces the strict limit, which is conservative rather than wrong.
 
+## ADR-019 — Lesson reminders: occurrences materialised from the published timetable
+
+- **Status:** Accepted (implemented 2026-10-17)
+- **Context:** The handbook requires a reminder two minutes before a lesson to the teacher and that
+  class's students, parents off by default, one reminder for a double period, a school-wide default
+  with a per-user override, and an idempotency key of (occurrence, user, offset).
+- **Decision:**
+  - **Occurrences.** `lesson_occurrence` holds one dated lesson (class, stream, subject, teacher,
+    room, date, start, end, span) expanded from a published grid. A double period is one row with
+    `span = 2`, so "one reminder at the start of a double" falls out of the model instead of needing
+    a special case. A row is identified by (class, stream, subject, date, start), so materialisation
+    refreshes in place and revives a cancelled row rather than duplicating.
+  - **Reminders are scheduled notifications**, not a second delivery path: `notification` gained
+    `due_at` and `dedupe_key`, and a unique index on (school, `dedupe_key`). A future-dated row is
+    invisible in the inbox (`due_at is null or due_at <= now()`) and is released by
+    `DueNotificationWorker` and `ScheduledNotificationReleaser`, which claim with
+    `FOR UPDATE SKIP LOCKED` by **clearing `due_at`** — the claim marker itself — so a reminder cannot
+    be taken twice even with several instances. In-app rows flip to sent; external channels are
+    enqueued on the existing transactional outbox, so a reminder inherits the outbox's retries.
+  - **Idempotency key** is `lesson.reminder:{occurrence}:{offset}`, with the channel appended by the
+    notifications layer, so the same reminder on two channels stays idempotent per channel.
+  - **Recipients** are the lesson's teacher, then the class's enrolled students. Guardians are
+    included only when `timetable.reminderNotifyGuardians` is true, which is off by default.
+  - **Settings** live in `school.settings`, following the established convention:
+    `timetable.reminderLeadMinutes` (default 2), the per-user override map
+    `timetable.userReminderLeadMinutes`, `timetable.reminderNotifyGuardians` and
+    `timetable.scheduleHorizonDays` (default 30).
+  - **Publishing rolls the timetable forward.** The term's future occurrences produced by any other
+    version are cancelled and their pending reminders withdrawn through
+    `NotificationsApi.cancelScheduled(prefix)`; the new version is then materialised.
+    `LessonScheduleWorker` extends the horizon hourly, so a reminder is always scheduled well before
+    its lesson.
+  - **Pure cores.** The arithmetic (weekday matching, period times in the school's time zone, doubles
+    that must not cross a break, the window bound) is `OccurrenceMaterialiser`, and the reminder set
+    is `LessonReminderPlanner`. Both are free of Spring and the database and are unit tested directly.
+  - `GET /timetable/occurrences` exposes the dated lessons, which is the agenda view for a class or a
+    teacher.
+- **Consequences:**
+  - Verified against a real PostgreSQL instance: `V15` applies through Flyway, the cross-tenant
+    isolation suite still passes with the new table under forced row-level security, and the dedupe
+    key, the inbox filter and the claim were probed directly (the second identical insert is skipped,
+    a future reminder is invisible, and claiming twice returns one row then none).
+  - There is no holiday calendar yet, so a term's `starts_on`/`ends_on` bound the schedule; holidays
+    and mid-term breaks are a documented follow-up rather than a silent assumption.
+  - A per-user lead override lives in the school settings jsonb (like the consecutive-lesson
+    overrides) instead of a user-preference table, so an override is stored per school.
+  - Reminders are in-app today. Email/SMS work through the same path but are not enabled by default,
+    because the school's guardian-consent and channel defaults are not yet expressed as settings.
+
