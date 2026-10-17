@@ -26,7 +26,7 @@ public class ModuleBoundaryTest {
     private static final List<String> MODULES = List.of(
             "auth", "tenants", "academics", "people", "learning", "tasks", "messaging",
             "lessons", "attendance", "notifications", "timetable", "sync", "audit",
-            "subscriptions", "featureflags");
+            "subscriptions", "featureflags", "cbe");
 
     @ArchTest
     static final ArchRule moduleInternalsAreNotReachableFromOtherModules = composed();
