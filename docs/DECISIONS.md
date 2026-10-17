@@ -20,3 +20,25 @@
   - Question banks, timed online attempts and seating plans are not built yet. Online quizzes stay in the
     learning module.
   - Each assessment, marking, moderation and publication change is written to the audit log.
+
+## ADR-022 — E-Learning courses reuse learning items instead of copying them
+
+- **Status:** Accepted (implemented 2026-10-17)
+- **Context:** The E-Learning screen called `/api/v1/elearning/*` endpoints that did not exist. Resources,
+  assignments and quizzes already live in the learning module with their own completion, submission and
+  attempt records.
+- **Decision:**
+  - New `elearning` module with `course` (DRAFT → PUBLISHED → ARCHIVED), `course_item` (an ordered
+    reference to a `learning_resource`, `assignment` or `quiz`) and `course_enrollment`
+    (ACTIVE → COMPLETED, or WITHDRAWN). All three are tenant-isolated by RLS.
+  - Progress is derived, not stored: `learning.api.LearningProgressApi` reports whether a learner has
+    completed each item and their published grade or quiz score. Progress is the share of required items
+    completed. Outcomes (average score) are reported separately from completion, as the spec asks.
+  - The first time a learner completes every required item, the enrollment becomes COMPLETED with
+    `completed_at`; this is the completion record and is audited.
+  - Permissions reuse `learning.manage` (staff) and `learning.view` (learners); no new permissions.
+  - The screen's Assignments and Resources tabs call the existing `/api/v1/learning` endpoints rather than
+    duplicating them.
+- **Consequences:**
+  - Discussion areas, offline course packages and certificates are not built yet.
+  - Progress reads one record per item per learner; very large courses may need a batched query later.

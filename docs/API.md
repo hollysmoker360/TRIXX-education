@@ -151,6 +151,15 @@ user prefix `/user`). See [ADR-005](DECISIONS.md).
 | `POST /results/{assessmentId}/publish` (every candidate marked or absent) | `exam.approve` |
 | `GET /my-results` (published results only) | `grade.view.own` |
 
+### elearning (`/api/v1/elearning`)
+| Method & path | Permission |
+|---------------|-----------|
+| `GET /courses?status=`, `POST /courses`, `PATCH /courses/{id}`, `DELETE /courses/{id}` (draft, no learners), `POST /courses/{id}/{publish,archive}` | `learning.manage` |
+| `POST /courses/{id}/items` (`{itemType: RESOURCE\|ASSIGNMENT\|QUIZ, refId, required}`), `DELETE /courses/{id}/items/{itemId}` | `learning.manage` |
+| `POST /courses/{id}/enroll` (`studentIds`, or the course's class when empty), `GET /courses/{id}/progress` | `learning.manage` |
+| `GET /courses/{id}/items` | `learning.view` |
+| `GET /courses/for-me`, `POST /courses/{id}/join`, `GET /courses/{id}/my-progress` (learners) | `learning.view` |
+
 ### attendance (`/api/v1/attendance`)
 | Method & path | Permission |
 |---------------|-----------|
