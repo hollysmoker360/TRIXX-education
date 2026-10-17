@@ -11,6 +11,10 @@ import '../../../core/router/app_routes.dart';
 import '../../../core/session/session.dart';
 import '../../academics/presentation/academics_screen.dart';
 import '../../advanced/presentation/advanced_screen.dart';
+import '../../boarding/presentation/boarding_screen.dart';
+import '../../canteen/presentation/canteen_screen.dart';
+import '../../clinic/presentation/clinic_screen.dart';
+import '../../facilities/presentation/facilities_screen.dart';
 import '../../cbe/presentation/cbe_screen.dart';
 import '../../communication/presentation/communication_screen.dart';
 import '../../hr/presentation/hr_screen.dart';
@@ -280,6 +284,46 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           group: s.settings,
           keywords: const ['inventory', 'stock', 'procurement'],
           page: const InventoryScreen(),
+        ),
+      if (can('people.view'))
+        NavItem(
+          id: ShellDestination.boarding,
+          label: 'Boarding',
+          icon: Icons.hotel_outlined,
+          selectedIcon: Icons.hotel,
+          group: s.settings,
+          keywords: const ['boarding', 'dormitory', 'hostel'],
+          page: const BoardingScreen(),
+        ),
+      if (can('people.view'))
+        NavItem(
+          id: ShellDestination.clinic,
+          label: 'Clinic',
+          icon: Icons.local_hospital_outlined,
+          selectedIcon: Icons.local_hospital,
+          group: s.settings,
+          keywords: const ['clinic', 'medical', 'health'],
+          page: const ClinicScreen(),
+        ),
+      if (can('people.view'))
+        NavItem(
+          id: ShellDestination.canteen,
+          label: 'Canteen',
+          icon: Icons.restaurant_outlined,
+          selectedIcon: Icons.restaurant,
+          group: s.settings,
+          keywords: const ['canteen', 'meals', 'food'],
+          page: const CanteenScreen(),
+        ),
+      if (can('people.view'))
+        NavItem(
+          id: ShellDestination.facilities,
+          label: 'Facilities',
+          icon: Icons.build_outlined,
+          selectedIcon: Icons.build,
+          group: s.settings,
+          keywords: const ['facilities', 'assets', 'maintenance'],
+          page: const FacilitiesScreen(),
         ),
       if (can('people.view'))
         NavItem(
