@@ -49,6 +49,9 @@ roles even where a role's explicit set omits them.
 | `audit.view` | View the audit log | owner, principal, admin, it_admin |
 | `sync.device.manage` | Revoke registered sync devices | owner, it_admin |
 | `notification.send` | Trigger/send notifications | owner, principal, admin, dept_head, teacher |
+| `exam.manage` | Author examination assessments, submit them for review, schedule sittings and register candidates | owner, principal, admin, dept_head, teacher |
+| `exam.mark` | Mark candidate scripts in the marking queue | owner, principal, admin, dept_head, teacher |
+| `exam.approve` | Approve/return/publish assessments, moderate marked scripts, publish results | owner, principal, admin, dept_head |
 
 ## 2. Default role matrix (system roles)
 
@@ -87,6 +90,9 @@ adds `school.view`, `chat.use`, `tasks.own` to all.)
 | `audit.view` | ✔ | ✔ | ✔ | | | | | | | ✔ |
 | `sync.device.manage` | ✔ | | | | | | | | | ✔ |
 | `notification.send` | ✔ | ✔ | ✔ | ✔ | ✔ | | | | | |
+| `exam.manage` | ✔ | ✔ | ✔ | ✔ | ✔ | | | | | |
+| `exam.mark` | ✔ | ✔ | ✔ | ✔ | ✔ | | | | | |
+| `exam.approve` | ✔ | ✔ | ✔ | ✔ | | | | | | |
 
 > Note: `owner` is the school-creator role and is seeded as the membership of whoever creates
 > the school (`TenantsApi.createSchool`). The matrix above is the default set applied via

@@ -23,6 +23,8 @@ jobs:
           POSTGRES_USER: schoolsphere
           POSTGRES_PASSWORD: schoolsphere_dev
           POSTGRES_DB: schoolsphere
+          # Listen on 5433 inside the container so the 5433:5433 mapping and the dev-profile URL agree.
+          PGPORT: 5433
         ports:
           - 5433:5433
         options: >-
