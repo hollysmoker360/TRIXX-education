@@ -10,7 +10,15 @@ final recordsProvider = FutureProvider.autoDispose.family<List<Map<String, dynam
   final rows = <Map<String, dynamic>>[];
   var page = 0;
   while (true) {
-    final data = await api.get(path, query: {'page': page, 'size': 100});
+    dynamic data;
+    try {
+      data = await api.get(path, query: {'page': page, 'size': 100});
+    } on ApiProblem catch (e) {
+      // Endpoints that do not exist yet (or return 404) are treated as empty
+      // collections so the screen renders its empty state instead of an error.
+      if (e.status == 404) return rows;
+      rethrow;
+    }
     if (data is List) return data.cast<Map<String, dynamic>>();
     final result = data as Map<String, dynamic>;
     final items = (result['items'] as List).cast<Map<String, dynamic>>();
