@@ -138,4 +138,8 @@ public class School {
     public void setSettings(java.util.Map<String, Object> settings) {
         this.settings = settings;
     }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }

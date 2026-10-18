@@ -197,7 +197,7 @@ class DataSubjectServiceTest {
                 .thenReturn(List.of());
         when(userDirectory.findById(subjectUserId)).thenReturn(Optional.of(
                 new UserDirectory.UserRef(subjectUserId, "amina@school.example", "Amina Hassan",
-                        "+254700000000", "active")));
+                        "+254700000000", "active", false)));
 
         DataSubjectExport export = service.export(subjectUserId, null);
 

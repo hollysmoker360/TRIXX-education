@@ -4,6 +4,8 @@
 /// depend on it without a cycle.
 abstract final class AppRoutes {
   static const login = '/login';
+  static const acceptInvitation = '/accept-invitation';
+  static const superAdmin = '/super-admin';
   static const resetPassword = '/reset-password';
   static const mfa = '/mfa';
   static const selectSchool = '/select-school';

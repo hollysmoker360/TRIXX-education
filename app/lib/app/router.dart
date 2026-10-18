@@ -9,11 +9,13 @@ import '../features/assessment/presentation/marks_entry_screen.dart';
 import '../features/assessment/presentation/report_card_screen.dart';
 import '../features/attendance/presentation/attendance_screen.dart';
 import '../features/audit/presentation/audit_screen.dart';
+import '../features/auth/presentation/accept_invitation_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/mfa_screen.dart';
 import '../features/auth/presentation/reset_password_screen.dart';
 import '../features/auth/presentation/school_select_screen.dart';
 import '../features/auth/presentation/session_expired_screen.dart';
+import '../features/super_admin/presentation/super_admin_screen.dart';
 import '../features/chat/presentation/chat_screen.dart';
 import '../features/gallery/presentation/component_gallery_screen.dart';
 import '../features/home/presentation/home_shell.dart';
@@ -44,6 +46,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final location = state.matchedLocation;
       final atAuth = location == AppRoutes.login ||
+          location == AppRoutes.acceptInvitation ||
           location == AppRoutes.resetPassword ||
           location == AppRoutes.mfa ||
           location == AppRoutes.sessionExpired;
@@ -60,6 +63,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: AppRoutes.acceptInvitation,
+        builder: (context, state) => AcceptInvitationScreen(
+          token: state.uri.queryParameters['token'],
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.superAdmin,
+        builder: (context, state) => const SuperAdminScreen(),
+      ),
       GoRoute(path: AppRoutes.resetPassword, builder: (context, state) => const ResetPasswordScreen()),
       GoRoute(path: AppRoutes.mfa, builder: (context, state) => const MfaScreen()),
       GoRoute(path: AppRoutes.sessionExpired, builder: (context, state) => const SessionExpiredScreen()),

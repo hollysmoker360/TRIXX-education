@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/strings.dart';
@@ -60,9 +61,85 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
                 }));
           })),
       ]),
-      floatingActionButton: manager ? FloatingActionButton.extended(onPressed: _busy ? null : () => _edit(),
-        icon: const Icon(Icons.person_add_alt), label: Text('${s.add} ${_sections(s)[_section]}')) : null,
+      floatingActionButton: manager ? FloatingActionButton.extended(
+        onPressed: _busy ? null : () => _section == 'parents' ? _inviteParent() : _edit(),
+        icon: const Icon(Icons.person_add_alt),
+        label: Text(_section == 'parents' ? 'Invite Parent' : '${s.add} ${_sections(s)[_section]}'),
+      ) : null,
     );
+  }
+
+  Future<void> _inviteParent() async {
+    final s = S.of(context);
+    setState(() => _busy = true);
+    try {
+      final students = await _options('/api/v1/people/students');
+      if (!mounted) return;
+      final api = ref.read(apiClientProvider);
+      Map<String, dynamic>? inviteResult;
+      final fields = <RecordField>[
+        RecordField('firstName', s.fieldFirstName),
+        RecordField('lastName', s.fieldLastName),
+        RecordField('email', s.email, kind: FieldKind.email),
+        RecordField('phone', s.fieldPhone, required: false),
+        RecordField('childStudentId', 'Child / Linked Student', required: false, options: students),
+      ];
+      final saved = await showRecordEditor(
+        context,
+        title: 'Invite Parent',
+        fields: fields,
+        initial: {},
+        onSave: (values) async {
+          final res = await api.post('/api/v1/people/parents/invite', data: {
+            'email': values['email'],
+            'firstName': values['firstName'],
+            'lastName': values['lastName'],
+            'phone': values['phone'],
+            'childStudentId': values['childStudentId'],
+          });
+          inviteResult = res as Map<String, dynamic>;
+        },
+      );
+      if (!mounted || !saved) return;
+      ref.invalidate(recordsProvider('/api/v1/people/parents'));
+      if (inviteResult != null) {
+        final setupUrl = inviteResult!['setupUrl'] ?? '';
+        final token = inviteResult!['token'] ?? '';
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Parent Invitation Sent'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('An invitation link was generated for the parent with child setup:'),
+                const SizedBox(height: 12),
+                SelectableText('Invitation Token:\n$token', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                SelectableText('Setup Link:\n$setupUrl', style: const TextStyle(color: Colors.blue)),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: setupUrl.toString()));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Setup link copied to clipboard!')),
+                  );
+                },
+                child: const Text('Copy Setup Link'),
+              ),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(s.done)),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) showApiError(context, e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<Map<String, String>> _options(String path, {String id = 'id'}) async =>

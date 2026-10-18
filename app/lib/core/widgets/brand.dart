@@ -64,7 +64,7 @@ class SchoolLogo extends StatelessWidget {
           width: size,
           height: size,
           fit: BoxFit.contain,
-          errorBuilder: (context, _, _) => Avatar(name: schoolName, size: size),
+          errorBuilder: (context, error, stackTrace) => Avatar(name: schoolName, size: size),
           semanticLabel: schoolName,
         ),
       );

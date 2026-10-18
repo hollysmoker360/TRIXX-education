@@ -98,7 +98,7 @@ class ScreenScaffold extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: AppSpacing.s8),
                 child: Wrap(spacing: AppSpacing.s8, children: [
                   ...secondaryActions,
-                  ?primaryAction,
+                  if (primaryAction != null) primaryAction!,
                 ]),
               ),
             child,

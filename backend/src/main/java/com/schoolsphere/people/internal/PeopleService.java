@@ -2,6 +2,7 @@ package com.schoolsphere.people.internal;
 
 import com.schoolsphere.academics.api.AcademicsApi;
 import com.schoolsphere.audit.api.AuditLogService;
+import com.schoolsphere.auth.api.InvitationApi;
 import com.schoolsphere.auth.api.UserDirectory;
 import com.schoolsphere.common.api.PageResponse;
 import com.schoolsphere.common.error.ApiException;
@@ -54,6 +55,7 @@ public class PeopleService implements PeopleApi {
     private final TeacherAssignmentRepository assignmentRepository;
     private final GradingScaleRepository gradingScaleRepository;
     private final UserDirectory userDirectory;
+    private final InvitationApi invitationApi;
     private final AcademicsApi academicsApi;
     private final AuditLogService auditLogService;
     private final JdbcTemplate jdbcTemplate;
@@ -67,6 +69,7 @@ public class PeopleService implements PeopleApi {
                          TeacherAssignmentRepository assignmentRepository,
                          GradingScaleRepository gradingScaleRepository,
                          UserDirectory userDirectory,
+                         InvitationApi invitationApi,
                          AcademicsApi academicsApi,
                          AuditLogService auditLogService,
                          JdbcTemplate jdbcTemplate) {
@@ -79,6 +82,7 @@ public class PeopleService implements PeopleApi {
         this.assignmentRepository = assignmentRepository;
         this.gradingScaleRepository = gradingScaleRepository;
         this.userDirectory = userDirectory;
+        this.invitationApi = invitationApi;
         this.academicsApi = academicsApi;
         this.auditLogService = auditLogService;
         this.jdbcTemplate = jdbcTemplate;
@@ -239,6 +243,25 @@ public class PeopleService implements PeopleApi {
                 .map(p -> new ParentView(p.getId(), p.getUserId(), emails.get(p.getUserId()), p.getFirstName(),
                         p.getLastName()))
                 .toList();
+    }
+
+    public ParentInviteView inviteParent(String email, String firstName, String lastName, String phone, UUID childStudentId) {
+        UUID schoolId = schoolId();
+        if (childStudentId != null) {
+            requireStudent(schoolId, childStudentId);
+        }
+        String displayName = (firstName + " " + lastName).trim();
+        InvitationApi.CreatedInvitation created = invitationApi.createInvitation(
+                email,
+                "parent",
+                schoolId,
+                childStudentId,
+                TenantContext.actorUserId()
+        );
+
+        auditLogService.record("parent.invited", "account_invitation", created.id(), null, Map.of("email", email, "childStudentId", childStudentId));
+
+        return new ParentInviteView(created.id(), email, displayName, childStudentId, created.token(), created.setupUrl());
     }
 
     public OnboardedParent onboardParent(UUID userId, String email, String firstName, String lastName, String phone) {
@@ -950,6 +973,9 @@ public class PeopleService implements PeopleApi {
     }
 
     public record ParentView(UUID id, UUID userId, String email, String firstName, String lastName) {
+    }
+
+    public record ParentInviteView(UUID id, String email, String displayName, UUID childStudentId, String token, String setupUrl) {
     }
 
     public record OnboardedParent(ParentView parent, String temporaryPassword) {
