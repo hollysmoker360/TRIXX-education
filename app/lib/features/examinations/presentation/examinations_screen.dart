@@ -425,7 +425,7 @@ class _ExaminationsScreenState extends ConsumerState<ExaminationsScreen> {
     final saved = await showRecordEditor(
       context,
       title: 'Schedule sitting',
-      initial: {'assessmentId': ?assessmentId},
+      initial: {'assessmentId': assessmentId},
       fields: [
         RecordField('assessmentId', 'Assessment', options: schedulable),
         const RecordField('title', 'Sitting title', required: false),

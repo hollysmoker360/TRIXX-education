@@ -474,7 +474,7 @@ class _StatusPicker extends StatelessWidget {
             icon: const Icon(Icons.event_busy, size: 16),
             tooltip: s.markExcused),
       ],
-      selected: {?value},
+      selected: value == null ? const {} : {value!},
       emptySelectionAllowed: true,
       onSelectionChanged:
           enabled ? (selection) => onChanged(selection.first) : null,

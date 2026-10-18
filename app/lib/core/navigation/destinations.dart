@@ -37,6 +37,7 @@ abstract final class ShellDestination {
   static const reports = 'reports';
   static const resources = 'resources';
   static const tasks = 'tasks';
+  static const superAdmin = 'superAdmin';
 }
 
 /// One-shot request for the shell to focus a destination.

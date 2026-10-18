@@ -242,7 +242,7 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: widget.rows.length,
-      separatorBuilder: (_, _) => Divider(height: 1, color: context.tokens.border),
+      separatorBuilder: (context, index) => Divider(height: 1, color: context.tokens.border),
       itemBuilder: (context, index) {
         final row = widget.rows[index];
         final key = widget.rowKey(row);

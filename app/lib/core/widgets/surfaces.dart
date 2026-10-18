@@ -50,7 +50,7 @@ class SectionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                ?action,
+                if (action != null) action!,
                 if (trailing != null) ...[const SizedBox(width: AppSpacing.s8), trailing!],
               ],
             ),

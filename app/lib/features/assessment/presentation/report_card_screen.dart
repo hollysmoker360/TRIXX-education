@@ -77,7 +77,7 @@ class ReportCardScreen extends ConsumerWidget {
                   style: context.texts.headlineMedium,
                 ),
                 loading: () => Text(s.loading, style: context.texts.bodyMedium),
-                error: (_, _) => Text(studentName ?? '', style: context.texts.headlineMedium),
+                error: (e, st) => Text(studentName ?? '', style: context.texts.headlineMedium),
               ),
               const SizedBox(height: AppSpacing.s16),
               Text(s.published, style: context.texts.titleMedium),

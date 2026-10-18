@@ -134,7 +134,7 @@ Future<T?> showSidePanel<T>(
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: Colors.black54,
     transitionDuration: AppMotion.pageTransition,
-    pageBuilder: (context, _, _) {
+    pageBuilder: (context, animation, secondaryAnimation) {
       final panel = SafeArea(
         child: Material(
           color: context.tokens.surfaceElevated,

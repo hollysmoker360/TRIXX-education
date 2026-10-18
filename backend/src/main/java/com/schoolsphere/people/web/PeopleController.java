@@ -124,6 +124,13 @@ public class PeopleController {
                 request.phone());
     }
 
+    @PostMapping("/parents/invite")
+    @PreAuthorize("@policy.can('people.manage')")
+    public PeopleService.ParentInviteView inviteParent(@Valid @RequestBody InviteParentRequest request) {
+        return peopleService.inviteParent(request.email(), request.firstName(), request.lastName(), request.phone(),
+                request.childStudentId());
+    }
+
     // ----- guardian links -----
 
     @GetMapping("/guardians")
@@ -246,6 +253,10 @@ public class PeopleController {
 
     public record ParentRequest(UUID userId, String email, @NotBlank String firstName, @NotBlank String lastName,
                                 String phone) {
+    }
+
+    public record InviteParentRequest(@NotBlank String email, @NotBlank String firstName, @NotBlank String lastName,
+                                     String phone, UUID childStudentId) {
     }
 
     public record GuardianLinkRequest(@NotNull UUID parentId, @NotNull UUID studentId, @NotBlank String relationship,

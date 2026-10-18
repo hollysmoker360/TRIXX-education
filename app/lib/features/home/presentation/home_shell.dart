@@ -45,6 +45,7 @@ import '../../reports/presentation/reports_screen.dart';
 import '../../resources/presentation/resources_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../subscriptions/presentation/subscriptions_screen.dart';
+import '../../super_admin/presentation/super_admin_screen.dart';
 import '../../sync/presentation/sync_screen.dart';
 import '../../tasks/presentation/tasks_screen.dart';
 import '../../timetable/presentation/timetable_screen.dart';
@@ -385,6 +386,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         keywords: const ['notifications', 'alerts', 'arifa'],
         page: const NotificationsScreen(embedded: true),
       ),
+      if (session.user?.isPlatformAdmin == true)
+        NavItem(
+          id: ShellDestination.superAdmin,
+          label: 'Platform Super Admin',
+          icon: Icons.admin_panel_settings_outlined,
+          selectedIcon: Icons.admin_panel_settings,
+          group: s.navAdministration,
+          keywords: const ['super admin', 'platform', 'schools', 'tenants'],
+          page: const SuperAdminScreen(),
+        ),
       if (can('audit.view'))
         NavItem(
           label: s.audit,
@@ -465,6 +476,9 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final index = _index.clamp(0, destinations.length - 1);
 
     if (session.membership == null) {
+      if (session.user?.isPlatformAdmin == true) {
+        return const SuperAdminScreen();
+      }
       return Scaffold(
         body: Center(
           child: Padding(

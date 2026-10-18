@@ -23,6 +23,9 @@ public interface TenantsApi {
     /** School settings JSON (spec 7.1); global table read without tenant context. */
     java.util.Map<String, Object> schoolSettings(UUID schoolId);
 
+    /** Ensures a user has an active membership in a school with the specified role code. */
+    MembershipView ensureMembership(UUID schoolId, UUID userId, String roleCode);
+
     record MembershipView(
             UUID membershipId,
             UUID schoolId,

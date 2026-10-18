@@ -13,10 +13,12 @@ public interface UserDirectory {
 
     List<UserRef> findAllByIdIn(List<UUID> ids);
 
+    boolean isPlatformAdmin(UUID userId);
+
     /** Creates a user with a generated temporary password; the caller surfaces it once. */
     CreatedUser createUserWithTemporaryPassword(String email, String displayName, String phone);
 
-    record UserRef(UUID id, String email, String displayName, String phone, String status) {
+    record UserRef(UUID id, String email, String displayName, String phone, String status, boolean isPlatformAdmin) {
     }
 
     record CreatedUser(UserRef user, String temporaryPassword) {

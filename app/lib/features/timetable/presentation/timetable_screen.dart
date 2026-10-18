@@ -130,7 +130,7 @@ class _TimetableScreenState extends ConsumerState<TimetableScreen> {
                       child: ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                         itemCount: byDay.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        separatorBuilder: (context, index) => const SizedBox(height: 8),
                         itemBuilder: (context, i) => _EntryCard(
                           entry: byDay[i],
                           showTeacher: true,
