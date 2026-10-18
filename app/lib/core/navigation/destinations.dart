@@ -15,6 +15,7 @@ abstract final class ShellDestination {
   static const assignments = 'assignments';
   static const quizzes = 'quizzes';
   static const marks = 'marks';
+  static const gradebook = 'gradebook';
   static const chat = 'chat';
   static const people = 'people';
   static const academics = 'academics';

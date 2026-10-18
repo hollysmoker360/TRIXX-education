@@ -33,6 +33,8 @@ import '../../chat/presentation/chat_screen.dart';
 import '../../dashboard/presentation/parent_family_screen.dart';
 import '../../dashboard/presentation/today_screen.dart';
 import '../../gallery/presentation/component_gallery_screen.dart';
+import '../../grades/presentation/gradebook_screen.dart';
+import '../../student_success/presentation/student_success_dashboard_screen.dart';
 import '../../lessons/presentation/lessons_screen.dart';
 import '../../notifications/presentation/notifications_provider.dart';
 import '../../notifications/presentation/notifications_screen.dart';
@@ -157,6 +159,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           keywords: const ['marks', 'grades', 'results', 'alama'],
           page: const AssessmentsScreen(),
         ),
+      if (can('grade.enter') || can('grade.view') || can('grade.view.own'))
+        NavItem(
+          id: ShellDestination.gradebook,
+          label: s.gradebook,
+          icon: Icons.table_view_outlined,
+          selectedIcon: Icons.table_view,
+          group: s.navTeachingLearning,
+          keywords: const ['gradebook', 'grid', 'marks'],
+          page: const GradebookScreen(classId: ''),
+        ),
       if (can('exam.manage') || can('exam.mark') || can('exam.approve'))
         NavItem(
           id: ShellDestination.examinations,
@@ -215,6 +227,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           group: s.navTeachingLearning,
           keywords: const ['learning hub', 'resources', 'materials'],
           page: const ResourcesScreen(),
+        ),
+      if (can('student_success.view'))
+        NavItem(
+          id: ShellDestination.studentSuccess,
+          label: s.studentSuccess,
+          icon: Icons.insights_outlined,
+          selectedIcon: Icons.insights,
+          group: s.navTeachingLearning,
+          keywords: const ['progress', 'interventions', 'support'],
+          page: const StudentSuccessDashboardScreen(),
         ),
       NavItem(
         id: ShellDestination.library,

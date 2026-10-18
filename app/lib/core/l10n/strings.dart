@@ -252,6 +252,19 @@ class S {
   String get markAbsent => _v('markAbsent');
   String get markLate => _v('markLate');
   String get markExcused => _v('markExcused');
+
+  // Short aliases used by report screens
+  String get present => _v('markPresent');
+  String get absent => _v('markAbsent');
+  String get late => _v('markLate');
+  String get excused => _v('markExcused');
+  String get attendanceRate => _v('attendanceRate');
+  String get assessments => _v('assessments');
+  String get studentsAssessed => _v('studentsAssessed');
+  String get passRate => _v('passRate');
+  String get term => _v('term');
+
+  // --- Reports ---------------------------------------------------------------
   String get openSession => _v('openSession');
   String get closeSession => _v('closeSession');
   String get markAllPresent => _v('markAllPresent');
@@ -299,6 +312,7 @@ class S {
   String get assessmentSetup => _v('assessmentSetup');
   String get marksEntry => _v('marksEntry');
   String get gradebook => _v('gradebook');
+  String get gradebookDescription => _v('gradebookDescription');
   String get moderation => _v('moderation');
   String get draft => _v('draft');
   String get inReview => _v('inReview');
@@ -309,6 +323,27 @@ class S {
   String get missingMarks => _v('missingMarks');
   String get publishConfirm => _v('publishConfirm');
   String get notifyGuardians => _v('notifyGuardians');
+  String get createAssessment => _v('createAssessment');
+  String get editAssessment => _v('editAssessment');
+  String get assessmentDescription => _v('assessmentDescription');
+  String get assessmentSaved => _v('assessmentSaved');
+  String get assessmentTitle => _v('assessmentTitle');
+  String get assessmentTitleHint => _v('assessmentTitleHint');
+  String get assessmentType => _v('assessmentType');
+  String get typeTest => _v('typeTest');
+  String get typeQuiz => _v('typeQuiz');
+  String get typeExam => _v('typeExam');
+  String get typePractical => _v('typePractical');
+  String get typeProject => _v('typeProject');
+  String get maxMarks => _v('maxMarks');
+  String get dueDate => _v('dueDate');
+  String get dueDateHint => _v('dueDateHint');
+  String get components => _v('components');
+  String get componentName => _v('componentName');
+  String get addComponent => _v('addComponent');
+  String get removeComponent => _v('removeComponent');
+  String get untitled => _v('untitled');
+  String get allTerms => _v('allTerms');
 
   // --- Timetable -----------------------------------------------------------
   String get timetableManage => _v('timetableManage');
@@ -401,7 +436,30 @@ class S {
   String get componentGallery => _v('componentGallery');
   String get galleryHint => _v('galleryHint');
 
-  // --- Parameterised -------------------------------------------------------
+  // --- Student Success -------------------------------------------------------
+  String get studentSuccess => _v('studentSuccess');
+  String get studentSuccessDescription => _v('studentSuccessDescription');
+  String get studentProfile => _v('studentProfile');
+  String get createReferral => _v('createReferral');
+  String get studentsAtRisk => _v('studentsAtRisk');
+  String get openReferrals => _v('openReferrals');
+  String get activeInterventions => _v('activeInterventions');
+  String get pendingAction => _v('pendingAction');
+  String get onTrack => _v('onTrack');
+  String get recentActivity => _v('recentActivity');
+  String get riskLevel => _v('riskLevel');
+  String get yes => _v('yes');
+  String get no => _v('no');
+  String get attendanceConcern => _v('attendanceConcern');
+  String get academicDecline => _v('academicDecline');
+  String get incompleteWork => _v('incompleteWork');
+  String get riskIndicators => _v('riskIndicators');
+  String get supportReferrals => _v('supportReferrals');
+  String get interventionPlans => _v('interventionPlans');
+  String get interventionPlan => _v('interventionPlan');
+  String get timeline => _v('timeline');
+  String get event => _v('event');
+  String get referral => _v('referral');
   String uploadHint(String extensions, int megabytes) => _v('uploadHint')
       .replaceAll('%ext%', extensions)
       .replaceAll('%mb%', '$megabytes');
@@ -551,6 +609,100 @@ class S {
 
   /// `%field% is required.`
   String fieldRequired(String field) => _v('fieldRequired').replaceAll('%field%', field);
+
+  // --- Reports ---------------------------------------------------------------
+  String get totalAssessments => _v('totalAssessments');
+  String get assessment => _v('assessment');
+  String get entered => _v('entered');
+  String get completionRate => _v('completionRate');
+  String get reportsDescription => _v('reportsDescription');
+  String get academicReports => _v('academicReports');
+  String get cbeReports => _v('cbeReports');
+  String get attendanceReports => _v('attendanceReports');
+  String get financeReports => _v('financeReports');
+  String get peopleReports => _v('peopleReports');
+  String get otherReports => _v('otherReports');
+  String get academicReportsSubtitle => _v('academicReportsSubtitle');
+  String get cbeReportsSubtitle => _v('cbeReportsSubtitle');
+  String get attendanceReportsSubtitle => _v('attendanceReportsSubtitle');
+  String get financeReportsSubtitle => _v('financeReportsSubtitle');
+  String get peopleReportsSubtitle => _v('peopleReportsSubtitle');
+  String get otherReportsSubtitle => _v('otherReportsSubtitle');
+  String get gradeDistribution => _v('gradeDistribution');
+  String get gradeDistributionDescription => _v('gradeDistributionDescription');
+  String get gradeDistributionChart => _v('gradeDistributionChart');
+  String get gradeDistributionSummary => _v('gradeDistributionSummary');
+  String get subjectComparison => _v('subjectComparison');
+  String get subjectComparisonDescription => _v('subjectComparisonDescription');
+  String get subjectComparisonChart => _v('subjectComparisonChart');
+  String get subjectComparisonSummary => _v('subjectComparisonSummary');
+  String get assessmentCompletion => _v('assessmentCompletion');
+  String get assessmentCompletionDescription => _v('assessmentCompletionDescription');
+  String get assessmentCompletionChart => _v('assessmentCompletionChart');
+  String get assessmentCompletionSummary => _v('assessmentCompletionSummary');
+  String get termOverTerm => _v('termOverTerm');
+  String get termOverTermDescription => _v('termOverTermDescription');
+  String get termOverTermChart => _v('termOverTermChart');
+  String get termOverTermSummary => _v('termOverTermSummary');
+  String get competencyMastery => _v('competencyMastery');
+  String get competencyMasteryDescription => _v('competencyMasteryDescription');
+  String get competencyMasteryChart => _v('competencyMasteryChart');
+  String get competencyMasterySummary => _v('competencyMasterySummary');
+  String get evidenceCoverage => _v('evidenceCoverage');
+  String get evidenceCoverageDescription => _v('evidenceCoverageDescription');
+  String get attendancePatterns => _v('attendancePatterns');
+  String get attendancePatternsDescription => _v('attendancePatternsDescription');
+  String get attendancePatternsChart => _v('attendancePatternsChart');
+  String get attendancePatternsSummary => _v('attendancePatternsSummary');
+  String get studentEngagement => _v('studentEngagement');
+  String get studentEngagementDescription => _v('studentEngagementDescription');
+  String get collectionSummary => _v('collectionSummary');
+  String get collectionSummaryDescription => _v('collectionSummaryDescription');
+  String get expenditure => _v('expenditure');
+  String get expenditureDescription => _v('expenditureDescription');
+  String get expenditureChart => _v('expenditureChart');
+  String get expenditureSummary => _v('expenditureSummary');
+  String get enrollment => _v('enrollment');
+  String get enrollmentDescription => _v('enrollmentDescription');
+  String get staffing => _v('staffing');
+  String get staffingDescription => _v('staffingDescription');
+  String get staffingChart => _v('staffingChart');
+  String get staffingSummary => _v('staffingSummary');
+  String get totalStudents => _v('totalStudents');
+  String get averageScore => _v('averageScore');
+  String get medianScore => _v('medianScore');
+  String get allClasses => _v('allClasses');
+  String get count => _v('count');
+  String get percent => _v('percent');
+  String get competency => _v('competency');
+  String get code => _v('code');
+  String get mastered => _v('mastered');
+  String get developing => _v('developing');
+  String get beginning => _v('beginning');
+  String get masteryRate => _v('masteryRate');
+  String get studentsWithEvidence => _v('studentsWithEvidence');
+  String get totalCompetencies => _v('totalCompetencies');
+  String get withEvidence => _v('withEvidence');
+  String get coverageRate => _v('coverageRate');
+  String get overallAttendanceRate => _v('overallAttendanceRate');
+  String get submissionRate => _v('submissionRate');
+  String get assignmentsSubmitted => _v('assignmentsSubmitted');
+  String get assignmentsMissing => _v('assignmentsMissing');
+  String get totalInvoiced => _v('totalInvoiced');
+  String get totalCollected => _v('totalCollected');
+  String get totalOutstanding => _v('totalOutstanding');
+  String get invoiced => _v('invoiced');
+  String get collected => _v('collected');
+  String get outstanding => _v('outstanding');
+  String get totalExpenditure => _v('totalExpenditure');
+  String get category => _v('category');
+  String get supplier => _v('supplier');
+  String get invoiceCount => _v('invoiceCount');
+  String get totalEnrolled => _v('totalEnrolled');
+  String get enrollmentRate => _v('enrollmentRate');
+  String get role => _v('role');
+  String get totalStaff => _v('totalStaff');
+  String get onLeave => _v('onLeave');
 }
 
 const _en = <String, String>{
@@ -591,7 +743,7 @@ const _en = <String, String>{
   'messages': 'Messages',
   'people': 'People',
   'academics': 'Academics',
-  'reports': 'Reports',
+  'reports': 'Reports & Analytics',
   'resources': 'Learning Hub',
   'syncCenter': 'Sync',
   'settings': 'Settings',
@@ -752,6 +904,15 @@ const _en = <String, String>{
   'savedLocally': 'Saved on this device',
   'attendanceSaved': 'Attendance saved',
   'registerClosed': 'Register closed',
+  'present': 'Present',
+  'absent': 'Absent',
+  'late': 'Late',
+  'excused': 'Excused',
+  'attendanceRate': 'Attendance rate',
+  'assessments': 'Assessments',
+  'studentsAssessed': 'Students assessed',
+  'passRate': 'Pass rate',
+  'term': 'Term',
   'reason': 'Reason',
   'correctionRequest': 'Correction request',
   'originalValue': 'Original',
@@ -797,6 +958,27 @@ const _en = <String, String>{
   'missingMarks': 'Missing marks',
   'publishConfirm': 'Once published, results are visible to guardians. Corrections create a new audited version.',
   'notifyGuardians': 'Notify guardians',
+  'createAssessment': 'Create assessment',
+  'editAssessment': 'Edit assessment',
+  'assessmentDescription': 'Set up an assessment, its components, and draft grade entries for every student in the class.',
+  'assessmentSaved': 'Assessment saved.',
+  'assessmentTitle': 'Title',
+  'assessmentTitleHint': 'e.g. Unit Test 1 — Algebra',
+  'assessmentType': 'Type',
+  'typeTest': 'Test',
+  'typeQuiz': 'Quiz',
+  'typeExam': 'Exam',
+  'typePractical': 'Practical',
+  'typeProject': 'Project',
+  'maxMarks': 'Max marks',
+  'dueDate': 'Due date',
+  'dueDateHint': 'Optional',
+  'components': 'Components',
+  'componentName': 'Component name',
+  'addComponent': 'Add component',
+  'removeComponent': 'Remove component',
+  'untitled': 'Untitled',
+  'allTerms': 'All terms',
   'timetableManage': 'Manage timetable',
   'generate': 'Generate',
   'validate': 'Validate',
@@ -1001,6 +1183,117 @@ const _en = <String, String>{
   'titleLabel': 'Title',
   'descriptionLabel': 'Description',
   'fieldRequired': '%field% is required.',
+  'studentSuccess': 'Student Success',
+  'studentSuccessDescription': 'Learner support, interventions, and progress tracking.',
+  'studentProfile': 'Student Profile',
+  'createReferral': 'Create Referral',
+  'studentsAtRisk': 'Students at Risk',
+  'openReferrals': 'Open Referrals',
+  'activeInterventions': 'Active Interventions',
+  'pendingAction': 'Pending action',
+  'onTrack': 'On track',
+  'recentActivity': 'Recent Activity',
+  'riskLevel': 'Risk Level',
+  'yes': 'Yes',
+  'no': 'No',
+  'attendanceConcern': 'Attendance Concern',
+  'academicDecline': 'Academic Decline',
+  'incompleteWork': 'Incomplete Work',
+  'riskIndicators': 'Risk Indicators',
+  'supportReferrals': 'Support Referrals',
+  'interventionPlans': 'Intervention Plans',
+  'interventionPlan': 'Intervention Plan',
+  'timeline': 'Timeline',
+  'event': 'Event',
+  'referral': 'Referral',
+  'reportsDescription': 'Cross-module reports for academics, CBE, attendance, finance, and people.',
+  'academicReports': 'Academic',
+  'cbeReports': 'CBE',
+  'attendanceReports': 'Attendance',
+  'financeReports': 'Finance',
+  'peopleReports': 'People',
+  'otherReports': 'Other',
+  'academicReportsSubtitle': 'Grades, subjects, assessments, terms.',
+  'cbeReportsSubtitle': 'Competency mastery and evidence coverage.',
+  'attendanceReportsSubtitle': 'Daily patterns and student engagement.',
+  'financeReportsSubtitle': 'Fee collection and expenditure.',
+  'peopleReportsSubtitle': 'Enrollment and staffing.',
+  'otherReportsSubtitle': 'Miscellaneous reports.',
+  'gradeDistribution': 'Grade Distribution',
+  'gradeDistributionDescription': 'Distribution of grades across a class or subject.',
+  'gradeDistributionChart': 'Grades',
+  'gradeDistributionSummary': 'Bar chart of grade distribution with percentage per grade.',
+  'subjectComparison': 'Subject Comparison',
+  'subjectComparisonDescription': 'Average performance by subject.',
+  'subjectComparisonChart': 'Subjects',
+  'subjectComparisonSummary': 'Bar chart comparing average scores across subjects.',
+  'assessmentCompletion': 'Assessment Completion',
+  'assessmentCompletionDescription': 'Which assessments have marks entered vs missing.',
+  'assessmentCompletionChart': 'Completion',
+  'assessmentCompletionSummary': 'Bar chart of completion rates per assessment.',
+  'termOverTerm': 'Term Over Term',
+  'termOverTermDescription': 'Class average and pass rate trend across terms.',
+  'termOverTermChart': 'Trend',
+  'termOverTermSummary': 'Sparkline of class average across terms.',
+  'competencyMastery': 'Competency Mastery',
+  'competencyMasteryDescription': 'Mastery levels per competency for a class.',
+  'competencyMasteryChart': 'Mastery',
+  'competencyMasterySummary': 'Bar chart of mastery rate per competency.',
+  'evidenceCoverage': 'Evidence Coverage',
+  'evidenceCoverageDescription': 'Per-student competency evidence coverage.',
+  'attendancePatterns': 'Attendance Patterns',
+  'attendancePatternsDescription': 'Daily attendance rates over a date range.',
+  'attendancePatternsChart': 'Attendance',
+  'attendancePatternsSummary': 'Sparkline of daily attendance rate.',
+  'studentEngagement': 'Student Engagement',
+  'studentEngagementDescription': 'Per-student assignment submission and attendance rates.',
+  'collectionSummary': 'Fee Collection Summary',
+  'collectionSummaryDescription': 'Invoiced vs collected vs outstanding by period.',
+  'expenditure': 'Expenditure',
+  'expenditureDescription': 'Supplier expenditure grouped by category.',
+  'expenditureChart': 'Expenditure',
+  'expenditureSummary': 'Bar chart of expenditure by category.',
+  'enrollment': 'Enrollment',
+  'enrollmentDescription': 'Enrollment counts and rates by grade level.',
+  'staffing': 'Staffing',
+  'staffingDescription': 'Staff counts by role and status.',
+  'staffingChart': 'Staff',
+  'staffingSummary': 'Bar chart of staff count by role.',
+  'totalStudents': 'Total Students',
+  'averageScore': 'Average Score',
+  'medianScore': 'Median Score',
+  'allClasses': 'All Classes',
+  'count': 'Count',
+  'percent': 'Percent',
+  'competency': 'Competency',
+  'code': 'Code',
+  'mastered': 'Mastered',
+  'developing': 'Developing',
+  'beginning': 'Beginning',
+  'masteryRate': 'Mastery Rate',
+  'studentsWithEvidence': 'Students with Evidence',
+  'totalCompetencies': 'Total Competencies',
+  'withEvidence': 'With Evidence',
+  'coverageRate': 'Coverage Rate',
+  'overallAttendanceRate': 'Overall Attendance Rate',
+  'submissionRate': 'Submission Rate',
+  'assignmentsSubmitted': 'Assignments Submitted',
+  'assignmentsMissing': 'Assignments Missing',
+  'totalInvoiced': 'Total Invoiced',
+  'totalCollected': 'Total Collected',
+  'totalOutstanding': 'Total Outstanding',
+  'invoiced': 'Invoiced',
+  'collected': 'Collected',
+  'outstanding': 'Outstanding',
+  'totalExpenditure': 'Total Expenditure',
+  'category': 'Category',
+  'supplier': 'Supplier',
+  'invoiceCount': 'Invoice Count',
+  'totalEnrolled': 'Total Enrolled',
+  'enrollmentRate': 'Enrollment Rate',
+  'role': 'Role',
+  'totalStaff': 'Total Staff',
+  'onLeave': 'On Leave',
 };
 
 const _sw = <String, String>{
@@ -1041,7 +1334,7 @@ const _sw = <String, String>{
   'messages': 'Ujumbe',
   'people': 'Watu',
   'academics': 'Masomo',
-  'reports': 'Ripoti',
+  'reports': 'Ripoti & Utafiti',
   'resources': 'Kituo cha kujifunza',
   'syncCenter': 'Usawazishaji',
   'settings': 'Mipangilio',
@@ -1247,6 +1540,27 @@ const _sw = <String, String>{
   'missingMarks': 'Alama zinazokosekana',
   'publishConfirm': 'Baada ya kutangaza, matokeo yanaonekana kwa wazazi. Marekebisho yanaunda toleo jipya lenye kumbukumbu.',
   'notifyGuardians': 'Wajulishe wazazi',
+  'createAssessment': 'Unda mitihani',
+  'editAssessment': 'Hariri mitihani',
+  'assessmentDescription': 'Angene mitihani, vienge vake, na vipengele vya msingi wa alama kwa kila mwanafunzi darasani.',
+  'assessmentSaved': 'Mitihani yimehifadhiwa.',
+  'assessmentTitle': 'Kichwa',
+  'assessmentTitleHint': 'Mfano: Unit Test 1 — Hisabati',
+  'assessmentType': 'Aina',
+  'typeTest': 'Test',
+  'typeQuiz': 'Jaribio',
+  'typeExam': 'Mtihani',
+  'typePractical': 'Tumaini',
+  'typeProject': 'Kazi',
+  'maxMarks': 'Alama ya juu',
+  'dueDate': 'Tarehe ya mwisho',
+  'dueDateHint': 'Hauhitaji',
+  'components': 'Vipengele',
+  'componentName': 'Jina la kengele',
+  'addComponent': 'Ongeza kengele',
+  'removeComponent': 'Ondoa kengele',
+  'untitled': 'Hakina kichwa',
+  'allTerms': 'Mihula yote',
   'timetableManage': 'Usimamizi wa ratiba',
   'generate': 'Zalisha',
   'validate': 'Thibitisha',
@@ -1451,6 +1765,117 @@ const _sw = <String, String>{
   'titleLabel': 'Kichwa',
   'descriptionLabel': 'Maelezo',
   'fieldRequired': '%field% inahitajika.',
+  'studentSuccess': 'Maendeleo ya Mwanafunzi',
+  'studentSuccessDescription': 'Usanidi, msaada na maendeleo ya mwanafunzi.',
+  'studentProfile': 'Wasifu wa Mwanafunzi',
+  'createReferral': 'Unda Ombi',
+  'studentsAtRisk': 'Wanafunzi wa Hatari',
+  'openReferrals': 'Vitumishi Vipya',
+  'activeInterventions': 'Usanidi unayotumika',
+  'pendingAction': 'Kazi inayosubiri',
+  'onTrack': 'Kwenye mwanzo',
+  'recentActivity': 'Shughuli za hivi karibuni',
+  'riskLevel': 'Hatara',
+  'yes': 'Ndiyo',
+  'no': 'Hapana',
+  'attendanceConcern': 'Shida ya Mahudhurio',
+  'academicDecline': 'Ubainifu wa Shule',
+  'incompleteWork': 'Kazi Isiyo Kamilika',
+  'riskIndicators': 'Alama za Hatari',
+  'supportReferrals': 'Vitumishi vya Msaada',
+  'interventionPlans': 'Mipango ya Usanidi',
+  'interventionPlan': 'Mpango wa Usanidi',
+  'timeline': "Mstari wa Wakati",
+  'event': 'Ghala',
+  'referral': 'Ombi',
+  'reportsDescription': 'Ripoti za kipamo-akademia, CBE, mahudhurio, fedha, na watu.',
+  'academicReports': 'Akademia',
+  'cbeReports': 'CBE',
+  'attendanceReports': 'Mahudhurio',
+  'financeReports': 'Fedha',
+  'peopleReports': 'Watu',
+  'otherReports': 'Nyingine',
+  'academicReportsSubtitle': 'Alama, somo, mitihani, mihula.',
+  'cbeReportsSubtitle': 'Uwuaji wa uwezekano na maelezo ya sababu.',
+  'attendanceReportsSubtitle': 'Mauzo ya siku na ushawishi wa mwanafunzi.',
+  'financeReportsSubtitle': 'Kusanya na matumizi ya fedha.',
+  'peopleReportsSubtitle': 'Usajili na wafanyakazi.',
+  'otherReportsSubtitle': 'Ripoti nyingine.',
+  'gradeDistribution': 'Mpangilio wa Alama',
+  'gradeDistributionDescription': 'Mpangilio wa alama kwenye darasa au somo.',
+  'gradeDistributionChart': 'Alama',
+  'gradeDistributionSummary': 'Bar chart ya mpangilio wa alama na asilimia kila alama.',
+  'subjectComparison': 'Mshambulio wa Somo',
+  'subjectComparisonDescription': 'Wasanii wa wasanidi kila somo.',
+  'subjectComparisonChart': 'Somo',
+  'subjectComparisonSummary': 'Bar chart ya ulinganisho wa wasanidi kati ya somo.',
+  'assessmentCompletion': 'Ukamilifu wa Mitihani',
+  'assessmentCompletionDescription': 'Mitihani yaliyopakiwa alama vs hayapatikani.',
+  'assessmentCompletionChart': 'Ukamilifu',
+  'assessmentCompletionSummary': 'Bar chart ya asilimia ya ukamilifu kila mitihani.',
+  'termOverTerm': 'Mhala Kwa Mhala',
+  'termOverTermDescription': 'Wasanidi wa klasi na asilimia ya ufanisi mwingine.',
+  'termOverTermChart': 'Mwendo',
+  'termOverTermSummary': 'Sparkline ya wasanidi wa klasi mwingine.',
+  'competencyMastery': 'Uwezekano wa Ustadi',
+  'competencyMasteryDescription': 'Mawazo ya ustadi kila uwezekano kwa klasi.',
+  'competencyMasteryChart': 'Ustadi',
+  'competencyMasterySummary': 'Bar chart ya asilimia ya ustadi kila uwezekano.',
+  'evidenceCoverage': 'Upendo wa Sababu',
+  'evidenceCoverageDescription': 'Upendo wa sababu kila mwanafunzi.',
+  'attendancePatterns': 'Mauzo ya Mahudhurio',
+  'attendancePatternsDescription': 'Mauzo ya mahudhurio kila siku kwenye mchakato.',
+  'attendancePatternsChart': 'Mahudhurio',
+  'attendancePatternsSummary': 'Sparkline ya asilimia ya mahudhurio kila siku.',
+  'studentEngagement': 'Ushirani wa Mwanafunzi',
+  'studentEngagementDescription': 'Asilimia ya kazi inayopakiwa na mahudhurio kila mwanafunzi.',
+  'collectionSummary': 'Muhtasari wa Kusanya Fedha',
+  'collectionSummaryDescription': 'Ilipangwa vs ilipangiwa vs baki kila mchakato.',
+  'expenditure': 'Matumizi',
+  'expenditureDescription': 'Matumizi ya mtoa huduma kila kategoria.',
+  'expenditureChart': 'Matumizi',
+  'expenditureSummary': 'Bar chart ya matumizi kila kategoria.',
+  'enrollment': 'Usajili',
+  'enrollmentDescription': 'Enrollment counts and rates by grade level.',
+  'staffing': 'Wafanyakazi',
+  'staffingDescription': 'Wafanyakazi kila kazi na hali.',
+  'staffingChart': 'Wafanyakazi',
+  'staffingSummary': 'Bar chart ya idadi ya wafanyakazi kila kazi.',
+  'totalStudents': 'Idadi ya Mwanafunzi',
+  'averageScore': 'Wasanidi wa Wasi',
+  'medianScore': 'Wasanidi wa Kati',
+  'allClasses': 'Darasa Zote',
+  'count': 'Idadi',
+  'percent': 'Asilimia',
+  'competency': 'Uwezekano',
+  'code': 'Nambari',
+  'mastered': 'Umeweza',
+  'developing': 'Inaendelea',
+  'beginning': 'Amaanza',
+  'masteryRate': 'Asilimia ya Ustadi',
+  'studentsWithEvidence': 'Wanafunzi na Sababu',
+  'totalCompetencies': 'Idadi ya Uwezekano',
+  'withEvidence': 'Na Sababu',
+  'coverageRate': 'Asilimia ya Uwezekano',
+  'overallAttendanceRate': 'Asilimia ya Mahudhurio ya Jumla',
+  'submissionRate': 'Asilimia ya Kupakia',
+  'assignmentsSubmitted': 'Kazi Ziliopakiwa',
+  'assignmentsMissing': 'Kazi Zinazopatikana',
+  'totalInvoiced': 'Jumla ya Ilipangwa',
+  'totalCollected': 'Jumla ya Ilipangiwa',
+  'totalOutstanding': 'Jumla ya Baki',
+  'invoiced': 'Ilipangwa',
+  'collected': 'Ilipangiwa',
+  'outstanding': 'Baki',
+  'totalExpenditure': 'Jumla ya Matumizi',
+  'category': 'Kategoria',
+  'supplier': 'Mtoa Huduma',
+  'invoiceCount': 'Idadi ya Invoices',
+  'totalEnrolled': 'Jumla ya Waliandikishwa',
+  'enrollmentRate': 'Asilimia ya Usajili',
+  'role': 'Kazi',
+  'totalStaff': 'Jumla ya Wafanyakazi',
+  'onLeave': 'Ruhusa',
 };
 
 class LocaleController extends Notifier<Locale> {

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show unawaited;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/chat/chat_socket.dart';
@@ -22,7 +21,7 @@ final chatSocketProvider = Provider<ChatSocket?>((ref) {
   );
 
   ref.onDispose(() {
-    unawaited(socket.dispose());
+    socket.dispose();
   });
 
   return socket;
