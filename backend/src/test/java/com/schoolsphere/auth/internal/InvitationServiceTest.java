@@ -29,6 +29,7 @@ class InvitationServiceTest {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private TenantsApi tenantsApi;
+    private PeopleApi peopleApiMock;
     private ObjectProvider<PeopleApi> peopleApi;
     private AuditLogService auditLogService;
     private InvitationService invitationService;
@@ -39,15 +40,10 @@ class InvitationServiceTest {
         userRepository = mock(UserRepository.class);
         passwordEncoder = new BCryptPasswordEncoder();
         tenantsApi = mock(TenantsApi.class);
-        PeopleApi peopleApiMock = mock(PeopleApi.class);
+        peopleApiMock = mock(PeopleApi.class);
         peopleApi = new ObjectProvider<PeopleApi>() {
             @Override
             public PeopleApi getObject() {
-                return peopleApiMock;
-            }
-
-            @Override
-            public PeopleApi getObjectIfAvailable() {
                 return peopleApiMock;
             }
         };
