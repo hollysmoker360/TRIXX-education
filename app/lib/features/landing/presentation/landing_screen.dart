@@ -53,7 +53,7 @@ class LandingScreen extends ConsumerWidget {
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(
-                vertical: compact ? AppSpacing.s32 : AppSpacing.s64,
+                vertical: compact ? AppSpacing.s32 : AppSpacing.s48,
                 horizontal: AppSpacing.s24,
               ),
               decoration: BoxDecoration(
