@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -28,7 +29,7 @@ class InvitationServiceTest {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private TenantsApi tenantsApi;
-    private PeopleApi peopleApi;
+    private ObjectProvider<PeopleApi> peopleApi;
     private AuditLogService auditLogService;
     private InvitationService invitationService;
 
@@ -38,7 +39,8 @@ class InvitationServiceTest {
         userRepository = mock(UserRepository.class);
         passwordEncoder = new BCryptPasswordEncoder();
         tenantsApi = mock(TenantsApi.class);
-        peopleApi = mock(PeopleApi.class);
+        PeopleApi peopleApiMock = mock(PeopleApi.class);
+        peopleApi = () -> peopleApiMock;
         auditLogService = mock(AuditLogService.class);
 
         invitationService = new InvitationService(
