@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart' show unawaited;
+import 'dart:async' show unawaited;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/chat/chat_socket.dart';
 import '../../../core/config/app_config.dart';
-import '../../../core/networking/token_store.dart';
 import '../../../core/session/session.dart';
 
 /// Provides a ChatSocket scoped to the currently selected school.
