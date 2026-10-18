@@ -52,7 +52,7 @@ class AppTopBar extends ConsumerWidget implements PreferredSizeWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
       child: Row(
         children: [
-          ?leading,
+          if (leading != null) leading!,
           if (!window.usesRail)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: AppSpacing.s8),

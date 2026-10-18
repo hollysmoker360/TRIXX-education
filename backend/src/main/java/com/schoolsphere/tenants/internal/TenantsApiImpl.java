@@ -117,6 +117,40 @@ public class TenantsApiImpl implements TenantsApi {
         return schoolRepository.findById(schoolId).map(School::getSettings).orElseGet(Map::of);
     }
 
+    @Override
+    @Transactional
+    public MembershipView ensureMembership(UUID schoolId, UUID userId, String roleCode) {
+        School school = schoolRepository.findById(schoolId)
+                .orElseThrow(() -> ApiException.notFound("school_not_found", "School not found."));
+
+        SchoolRole role = roleRepository.findBySchoolIdAndCodeAndDeletedAtIsNull(schoolId, roleCode)
+                .orElseGet(() -> {
+                    SchoolRole newRole = new SchoolRole();
+                    newRole.setSchoolId(schoolId);
+                    newRole.setCode(roleCode);
+                    newRole.setName(displayName(roleCode));
+                    newRole.setSystem(true);
+                    newRole.setPermissions(PermissionCatalog.defaultPermissionsFor(roleCode));
+                    return roleRepository.save(newRole);
+                });
+
+        SchoolMembership membership = membershipRepository.findBySchoolIdAndUserIdAndDeletedAtIsNull(schoolId, userId)
+                .orElseGet(() -> {
+                    SchoolMembership newM = new SchoolMembership();
+                    newM.setSchoolId(schoolId);
+                    newM.setUserId(userId);
+                    newM.setStatus("active");
+                    return newM;
+                });
+
+        membership.setStatus("active");
+        if (membership.getRoles().stream().noneMatch(r -> r.getCode().equalsIgnoreCase(roleCode))) {
+            membership.getRoles().add(role);
+        }
+        membership = membershipRepository.save(membership);
+        return toView(membership, school);
+    }
+
     private MembershipView toView(SchoolMembership membership, School school) {
         Set<String> permissions = new LinkedHashSet<>();
         for (SchoolRole role : membership.getRoles()) {

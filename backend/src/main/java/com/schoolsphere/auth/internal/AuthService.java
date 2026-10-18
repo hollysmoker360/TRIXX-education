@@ -171,7 +171,7 @@ public class AuthService implements UserDirectory, com.schoolsphere.auth.api.Tok
 
     private UserDirectory.UserRef toRef(User user) {
         return new UserDirectory.UserRef(user.getId(), user.getEmail(), user.getDisplayName(), user.getPhone(),
-                user.getStatus());
+                user.getStatus(), user.isPlatformAdmin());
     }
 
     public record LoginResult(AuthTokens tokens, UserDirectory.UserRef user) {
@@ -192,6 +192,11 @@ public class AuthService implements UserDirectory, com.schoolsphere.auth.api.Tok
     @Override
     public List<UserRef> findAllByIdIn(List<UUID> ids) {
         return userRepository.findAllById(ids).stream().map(this::toRef).toList();
+    }
+
+    @Override
+    public boolean isPlatformAdmin(UUID userId) {
+        return userRepository.findById(userId).map(User::isPlatformAdmin).orElse(false);
     }
 
     @Override

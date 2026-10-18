@@ -5,12 +5,20 @@ import '../networking/api_problem.dart';
 import '../networking/token_store.dart';
 
 class AppUser {
-  AppUser({required this.id, required this.email, required this.displayName, this.phone, this.status});
+  AppUser({
+    required this.id,
+    required this.email,
+    required this.displayName,
+    this.phone,
+    this.status,
+    this.isPlatformAdmin = false,
+  });
   final String id;
   final String email;
   final String displayName;
   final String? phone;
   final String? status;
+  final bool isPlatformAdmin;
 
   factory AppUser.fromJson(Map<String, dynamic> json) => AppUser(
     id: json['id'] as String,
@@ -18,6 +26,7 @@ class AppUser {
     displayName: json['displayName'] as String,
     phone: json['phone'] as String?,
     status: json['status'] as String?,
+    isPlatformAdmin: json['isPlatformAdmin'] as bool? ?? false,
   );
 }
 

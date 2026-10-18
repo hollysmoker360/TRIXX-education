@@ -97,7 +97,7 @@ class PageHeader extends StatelessWidget {
                 const SizedBox(width: AppSpacing.s16),
                 Wrap(
                   spacing: AppSpacing.s8,
-                  children: [...secondaryActions, ?primaryAction],
+                  children: [...secondaryActions, if (primaryAction != null) primaryAction!],
                 ),
               ],
             ],
