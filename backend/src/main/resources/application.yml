@@ -17,6 +17,9 @@ spring:
     multipart:
       max-file-size: 25MB
       max-request-size: 30MB
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   jackson:
     default-property-inclusion: non_null
     serialization:
