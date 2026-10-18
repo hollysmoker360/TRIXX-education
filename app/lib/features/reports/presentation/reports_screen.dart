@@ -198,7 +198,7 @@ class _OverviewTab extends ConsumerWidget {
                   for (final item in priorityItems)
                     ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: _severityColor(item['severity'] as String?).withOpacity(0.15),
+                        backgroundColor: _severityColor(item['severity'] as String?).withValues(alpha: 0.15),
                         child: Icon(
                           Icons.warning_amber_rounded,
                           color: _severityColor(item['severity'] as String?),
