@@ -1,21 +1,7 @@
 package com.schoolsphere.analytics.internal;
 
-import com.schoolsphere.academics.internal.ClassGroup;
-import com.schoolsphere.academics.internal.ClassGroupRepository;
-import com.schoolsphere.academics.internal.Subject;
-import com.schoolsphere.academics.internal.SubjectRepository;
-import com.schoolsphere.attendance.internal.AttendanceEvent;
-import com.schoolsphere.attendance.internal.AttendanceEventRepository;
-import com.schoolsphere.attendance.internal.AttendanceSession;
-import com.schoolsphere.attendance.internal.AttendanceSessionRepository;
-import com.schoolsphere.cbe.internal.Competency;
-import com.schoolsphere.cbe.internal.CompetencyRepository;
-import com.schoolsphere.cbe.internal.RubricCriterionRepository;
-import com.schoolsphere.examinations.internal.ExamAssessment;
-import com.schoolsphere.examinations.internal.ExamAssessmentRepository;
-import com.schoolsphere.examinations.internal.ExamScript;
-import com.schoolsphere.examinations.internal.ExamScriptRepository;
-import com.schoolsphere.people.internal.StudentRepository;
+import com.schoolsphere.academics.api.AcademicsApi;
+import com.schoolsphere.people.api.PeopleApi;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -23,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,83 +17,56 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AnalyticsService {
 
-    private final StudentRepository studentRepository;
-    private final AttendanceSessionRepository attendanceSessionRepository;
-    private final AttendanceEventRepository attendanceEventRepository;
-    private final ExamAssessmentRepository examAssessmentRepository;
-    private final ExamScriptRepository examScriptRepository;
-    private final CompetencyRepository competencyRepository;
-    private final RubricCriterionRepository rubricCriterionRepository;
-    private final ClassGroupRepository classGroupRepository;
-    private final SubjectRepository subjectRepository;
+    private final JdbcTemplate jdbcTemplate;
+    private final PeopleApi peopleApi;
+    private final AcademicsApi academicsApi;
 
     public AnalyticsService(
-            StudentRepository studentRepository,
-            AttendanceSessionRepository attendanceSessionRepository,
-            AttendanceEventRepository attendanceEventRepository,
-            ExamAssessmentRepository examAssessmentRepository,
-            ExamScriptRepository examScriptRepository,
-            CompetencyRepository competencyRepository,
-            RubricCriterionRepository rubricCriterionRepository,
-            ClassGroupRepository classGroupRepository,
-            SubjectRepository subjectRepository) {
-        this.studentRepository = studentRepository;
-        this.attendanceSessionRepository = attendanceSessionRepository;
-        this.attendanceEventRepository = attendanceEventRepository;
-        this.examAssessmentRepository = examAssessmentRepository;
-        this.examScriptRepository = examScriptRepository;
-        this.competencyRepository = competencyRepository;
-        this.rubricCriterionRepository = rubricCriterionRepository;
-        this.classGroupRepository = classGroupRepository;
-        this.subjectRepository = subjectRepository;
+            JdbcTemplate jdbcTemplate,
+            PeopleApi peopleApi,
+            AcademicsApi academicsApi) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.peopleApi = peopleApi;
+        this.academicsApi = academicsApi;
     }
 
     public Map<String, Object> getOverview(UUID schoolId) {
-        long enrolledLearners = studentRepository.countBySchoolIdAndDeletedAtIsNull(schoolId);
-        List<AttendanceSession> sessions = attendanceSessionRepository.findAll().stream()
-                .filter(s -> schoolId.equals(s.getSchoolId()) && s.getDeletedAt() == null)
-                .toList();
-        long totalSessions = sessions.size();
+        Long enrolledCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM student WHERE school_id = ? AND deleted_at IS NULL",
+                Long.class, schoolId);
+        long enrolledLearners = enrolledCount != null ? enrolledCount : 0L;
 
-        long totalEvents = 0;
-        long presentEvents = 0;
-        for (AttendanceSession s : sessions) {
-            List<AttendanceEvent> events = attendanceEventRepository.findLatestPerStudent(s.getId(), schoolId);
-            totalEvents += events.size();
-            for (AttendanceEvent e : events) {
-                if ("present".equalsIgnoreCase(e.getStatus())) {
-                    presentEvents++;
-                }
-            }
-        }
+        Long sessionCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM attendance_session WHERE school_id = ? AND deleted_at IS NULL",
+                Long.class, schoolId);
+        long totalSessions = sessionCount != null ? sessionCount : 0L;
+
+        Long totalEventsCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM attendance_event WHERE school_id = ?",
+                Long.class, schoolId);
+        long totalEvents = totalEventsCount != null ? totalEventsCount : 0L;
+
+        Long presentEventsCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM attendance_event WHERE school_id = ? AND lower(status) = 'present'",
+                Long.class, schoolId);
+        long presentEvents = presentEventsCount != null ? presentEventsCount : 0L;
+
         double attendanceRate = totalEvents > 0
                 ? BigDecimal.valueOf((double) presentEvents / totalEvents * 100.0)
                         .setScale(1, RoundingMode.HALF_UP).doubleValue()
                 : 94.2;
 
-        List<ExamScript> scripts = examScriptRepository.findAll().stream()
-                .filter(s -> schoolId.equals(s.getSchoolId()) && s.getDeletedAt() == null)
-                .toList();
-        double assessmentAverage = 78.5;
-        if (!scripts.isEmpty()) {
-            double sum = 0;
-            int count = 0;
-            for (ExamScript script : scripts) {
-                if (script.getMarks() != null) {
-                    sum += script.getMarks().doubleValue();
-                    count++;
-                }
-            }
-            if (count > 0) {
-                assessmentAverage = BigDecimal.valueOf(sum / count)
-                        .setScale(1, RoundingMode.HALF_UP).doubleValue();
-            }
-        }
+        Double scriptAvg = jdbcTemplate.queryForObject(
+                "SELECT AVG(marks) FROM exam_script WHERE school_id = ? AND deleted_at IS NULL AND marks IS NOT NULL",
+                Double.class, schoolId);
+        double assessmentAverage = scriptAvg != null
+                ? BigDecimal.valueOf(scriptAvg).setScale(1, RoundingMode.HALF_UP).doubleValue()
+                : 78.5;
 
-        long totalCompetencies = competencyRepository.findAll().stream()
-                .filter(c -> schoolId.equals(c.getSchoolId()) && c.getDeletedAt() == null)
-                .count();
-        double competencyOnTrackRate = totalCompetencies > 0 ? 82.5 : 85.0;
+        Long cbeCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM competency WHERE school_id = ? AND deleted_at IS NULL",
+                Long.class, schoolId);
+        double competencyOnTrackRate = (cbeCount != null && cbeCount > 0) ? 82.5 : 85.0;
 
         List<Map<String, Object>> priorityFollowUps = new ArrayList<>();
         if (totalSessions == 0) {
@@ -117,7 +77,7 @@ public class AnalyticsService {
                     "severity", "AMBER"
             ));
         }
-        if (scripts.isEmpty()) {
+        if (scriptAvg == null) {
             priorityFollowUps.add(Map.of(
                     "type", "UNMODERATED_MARKS",
                     "title", "Assessment marking in progress",
@@ -159,15 +119,9 @@ public class AnalyticsService {
     }
 
     public Map<String, Object> getAcademicPerformance(UUID schoolId, UUID classGroupId, UUID subjectId) {
-        List<ExamAssessment> assessments = examAssessmentRepository.findAll().stream()
-                .filter(a -> schoolId.equals(a.getSchoolId()) && a.getDeletedAt() == null)
-                .toList();
-        List<ClassGroup> classGroups = classGroupRepository.findAll().stream()
-                .filter(cg -> schoolId.equals(cg.getSchoolId()) && cg.getDeletedAt() == null)
-                .toList();
-        List<Subject> subjects = subjectRepository.findAll().stream()
-                .filter(s -> schoolId.equals(s.getSchoolId()) && s.getDeletedAt() == null)
-                .toList();
+        Long assessmentCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM exam_assessment WHERE school_id = ? AND deleted_at IS NULL",
+                Long.class, schoolId);
 
         List<Map<String, Object>> scoreDistributions = List.of(
                 Map.of("band", "80-100% (Exceeding)", "count", 42, "percentage", 38.2),
@@ -176,16 +130,17 @@ public class AnalyticsService {
                 Map.of("band", "0-49% (Below)", "count", 5, "percentage", 4.6)
         );
 
-        List<Map<String, Object>> subjectPerformance = new ArrayList<>();
-        for (Subject sub : subjects) {
-            subjectPerformance.add(Map.of(
-                    "subjectId", sub.getId().toString(),
-                    "subjectName", sub.getName(),
-                    "code", sub.getCode(),
-                    "averageScore", 75.4,
-                    "passRate", 92.0
-            ));
-        }
+        List<Map<String, Object>> subjectPerformance = jdbcTemplate.query(
+                "SELECT id, name, code FROM subject WHERE school_id = ? AND deleted_at IS NULL",
+                (rs, rowNum) -> Map.<String, Object>of(
+                        "subjectId", rs.getString("id"),
+                        "subjectName", rs.getString("name"),
+                        "code", rs.getString("code"),
+                        "averageScore", 75.4,
+                        "passRate", 92.0
+                ),
+                schoolId);
+
         if (subjectPerformance.isEmpty()) {
             subjectPerformance = List.of(
                     Map.of("subjectName", "Mathematics", "code", "MATH", "averageScore", 78.2, "passRate", 94.0),
@@ -195,15 +150,16 @@ public class AnalyticsService {
             );
         }
 
-        List<Map<String, Object>> classComparisons = new ArrayList<>();
-        for (ClassGroup cg : classGroups) {
-            classComparisons.add(Map.of(
-                    "classGroupId", cg.getId().toString(),
-                    "className", cg.getName(),
-                    "averageScore", 76.5,
-                    "assessmentCount", assessments.size()
-            ));
-        }
+        List<Map<String, Object>> classComparisons = jdbcTemplate.query(
+                "SELECT id, name FROM class_group WHERE school_id = ? AND deleted_at IS NULL",
+                (rs, rowNum) -> Map.<String, Object>of(
+                        "classGroupId", rs.getString("id"),
+                        "className", rs.getString("name"),
+                        "averageScore", 76.5,
+                        "assessmentCount", assessmentCount != null ? assessmentCount : 0
+                ),
+                schoolId);
+
         if (classComparisons.isEmpty()) {
             classComparisons = List.of(
                     Map.of("className", "Grade 4 East", "averageScore", 78.4, "assessmentCount", 6),
@@ -216,17 +172,17 @@ public class AnalyticsService {
         response.put("scoreDistributions", scoreDistributions);
         response.put("subjectPerformance", subjectPerformance);
         response.put("classComparisons", classComparisons);
-        response.put("assessmentCount", assessments.size());
+        response.put("assessmentCount", assessmentCount != null ? assessmentCount : 0);
         return response;
     }
 
     public Map<String, Object> getCompetencyMastery(UUID schoolId) {
-        List<Competency> competencies = competencyRepository.findAll().stream()
-                .filter(c -> schoolId.equals(c.getSchoolId()) && c.getDeletedAt() == null)
-                .toList();
-        long totalCriteria = rubricCriterionRepository.findAll().stream()
-                .filter(rc -> schoolId.equals(rc.getSchoolId()) && rc.getDeletedAt() == null)
-                .count();
+        Long competencyCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM competency WHERE school_id = ? AND deleted_at IS NULL",
+                Long.class, schoolId);
+        Long criteriaCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM rubric_criterion WHERE school_id = ? AND deleted_at IS NULL",
+                Long.class, schoolId);
 
         List<Map<String, Object>> masteryBreakdown = List.of(
                 Map.of("level", "Exceeding Expectations", "count", 45, "percentage", 37.5),
@@ -235,16 +191,17 @@ public class AnalyticsService {
                 Map.of("level", "Below Expectations", "count", 5, "percentage", 4.2)
         );
 
-        List<Map<String, Object>> competencyList = new ArrayList<>();
-        for (Competency c : competencies) {
-            competencyList.add(Map.of(
-                    "id", c.getId().toString(),
-                    "code", c.getCode(),
-                    "title", c.getTitle(),
-                    "strand", "General",
-                    "masteryRate", 84.0
-            ));
-        }
+        List<Map<String, Object>> competencyList = jdbcTemplate.query(
+                "SELECT id, code, title FROM competency WHERE school_id = ? AND deleted_at IS NULL",
+                (rs, rowNum) -> Map.<String, Object>of(
+                        "id", rs.getString("id"),
+                        "code", rs.getString("code"),
+                        "title", rs.getString("title"),
+                        "strand", "General",
+                        "masteryRate", 84.0
+                ),
+                schoolId);
+
         if (competencyList.isEmpty()) {
             competencyList = List.of(
                     Map.of("code", "NUM.4.1", "title", "Place value understanding", "strand", "Numbers", "masteryRate", 88.5),
@@ -254,8 +211,8 @@ public class AnalyticsService {
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("totalCompetencies", competencies.size());
-        result.put("totalCriteria", totalCriteria);
+        result.put("totalCompetencies", competencyCount != null ? competencyCount : 0);
+        result.put("totalCriteria", criteriaCount != null ? criteriaCount : 0);
         result.put("masteryBreakdown", masteryBreakdown);
         result.put("competencies", competencyList);
         result.put("evidenceCoverageRate", 88.4);
@@ -263,24 +220,27 @@ public class AnalyticsService {
     }
 
     public Map<String, Object> getAttendanceAnalytics(UUID schoolId, String from, String to) {
-        List<AttendanceSession> sessions = attendanceSessionRepository.findAll().stream()
-                .filter(s -> schoolId.equals(s.getSchoolId()) && s.getDeletedAt() == null)
-                .toList();
+        Long sessionCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM attendance_session WHERE school_id = ? AND deleted_at IS NULL",
+                Long.class, schoolId);
 
-        long present = 0;
-        long absent = 0;
-        long late = 0;
-        long excused = 0;
+        Long presentCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM attendance_event WHERE school_id = ? AND lower(status) = 'present'",
+                Long.class, schoolId);
+        Long absentCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM attendance_event WHERE school_id = ? AND lower(status) = 'absent'",
+                Long.class, schoolId);
+        Long lateCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM attendance_event WHERE school_id = ? AND lower(status) = 'late'",
+                Long.class, schoolId);
+        Long excusedCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM attendance_event WHERE school_id = ? AND lower(status) = 'excused'",
+                Long.class, schoolId);
 
-        for (AttendanceSession session : sessions) {
-            List<AttendanceEvent> events = attendanceEventRepository.findLatestPerStudent(session.getId(), schoolId);
-            for (AttendanceEvent event : events) {
-                if ("present".equalsIgnoreCase(event.getStatus())) present++;
-                else if ("absent".equalsIgnoreCase(event.getStatus())) absent++;
-                else if ("late".equalsIgnoreCase(event.getStatus())) late++;
-                else if ("excused".equalsIgnoreCase(event.getStatus())) excused++;
-            }
-        }
+        long present = presentCount != null ? presentCount : 0;
+        long absent = absentCount != null ? absentCount : 0;
+        long late = lateCount != null ? lateCount : 0;
+        long excused = excusedCount != null ? excusedCount : 0;
 
         if (present == 0 && absent == 0 && late == 0 && excused == 0) {
             present = 1420;
@@ -309,23 +269,26 @@ public class AnalyticsService {
         result.put("absentCount", absent);
         result.put("lateCount", late);
         result.put("excusedCount", excused);
-        result.put("totalSessions", sessions.size());
+        result.put("totalSessions", sessionCount != null ? sessionCount : 0);
         result.put("dailyTrend", dailyTrend);
         return result;
     }
 
     public Map<String, Object> getDataQuality(UUID schoolId) {
-        List<AttendanceSession> sessions = attendanceSessionRepository.findAll().stream()
-                .filter(s -> schoolId.equals(s.getSchoolId()) && s.getDeletedAt() == null)
-                .toList();
-        List<ExamScript> unmoderatedScripts = examScriptRepository.findAll().stream()
-                .filter(s -> schoolId.equals(s.getSchoolId()) && s.getDeletedAt() == null && s.getModeratedAt() == null)
-                .toList();
+        Long sessionCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM attendance_session WHERE school_id = ? AND deleted_at IS NULL",
+                Long.class, schoolId);
+        Long unmoderatedCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM exam_script WHERE school_id = ? AND deleted_at IS NULL AND moderated_at IS NULL",
+                Long.class, schoolId);
+
+        long unmoderated = unmoderatedCount != null ? unmoderatedCount : 0;
+        long sessions = sessionCount != null ? sessionCount : 0;
 
         Map<String, Object> result = new HashMap<>();
-        result.put("status", unmoderatedScripts.isEmpty() ? "HEALTHY" : "ATTENTION_REQUIRED");
-        result.put("missingAttendanceSessions", sessions.isEmpty() ? 2 : 0);
-        result.put("unmoderatedAssessmentScripts", unmoderatedScripts.size());
+        result.put("status", unmoderated == 0 ? "HEALTHY" : "ATTENTION_REQUIRED");
+        result.put("missingAttendanceSessions", sessions == 0 ? 2 : 0);
+        result.put("unmoderatedAssessmentScripts", unmoderated);
         result.put("incompleteStudentProfiles", 0);
         result.put("lastCalculatedAt", java.time.Instant.now().toString());
         return result;

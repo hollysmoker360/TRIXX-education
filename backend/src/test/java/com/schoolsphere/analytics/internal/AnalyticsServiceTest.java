@@ -1,18 +1,12 @@
 package com.schoolsphere.analytics.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.schoolsphere.academics.internal.ClassGroupRepository;
-import com.schoolsphere.academics.internal.SubjectRepository;
-import com.schoolsphere.attendance.internal.AttendanceEventRepository;
-import com.schoolsphere.attendance.internal.AttendanceSessionRepository;
-import com.schoolsphere.cbe.internal.CompetencyRepository;
-import com.schoolsphere.cbe.internal.RubricCriterionRepository;
-import com.schoolsphere.examinations.internal.ExamAssessmentRepository;
-import com.schoolsphere.examinations.internal.ExamScriptRepository;
-import com.schoolsphere.people.internal.StudentRepository;
-import java.util.Collections;
+import com.schoolsphere.academics.api.AcademicsApi;
+import com.schoolsphere.people.api.PeopleApi;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,36 +15,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @ExtendWith(MockitoExtension.class)
 class AnalyticsServiceTest {
 
     @Mock
-    private StudentRepository studentRepository;
+    private JdbcTemplate jdbcTemplate;
 
     @Mock
-    private AttendanceSessionRepository attendanceSessionRepository;
+    private PeopleApi peopleApi;
 
     @Mock
-    private AttendanceEventRepository attendanceEventRepository;
-
-    @Mock
-    private ExamAssessmentRepository examAssessmentRepository;
-
-    @Mock
-    private ExamScriptRepository examScriptRepository;
-
-    @Mock
-    private CompetencyRepository competencyRepository;
-
-    @Mock
-    private RubricCriterionRepository rubricCriterionRepository;
-
-    @Mock
-    private ClassGroupRepository classGroupRepository;
-
-    @Mock
-    private SubjectRepository subjectRepository;
+    private AcademicsApi academicsApi;
 
     @InjectMocks
     private AnalyticsService analyticsService;
@@ -58,10 +35,18 @@ class AnalyticsServiceTest {
     @Test
     void getOverviewReturnsExpectedKeysAndDefaultsWhenEmpty() {
         UUID schoolId = UUID.randomUUID();
-        when(studentRepository.countBySchoolIdAndDeletedAtIsNull(schoolId)).thenReturn(120L);
-        when(attendanceSessionRepository.findAll()).thenReturn(Collections.emptyList());
-        when(examScriptRepository.findAll()).thenReturn(Collections.emptyList());
-        when(competencyRepository.findAll()).thenReturn(Collections.emptyList());
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM student WHERE school_id = ? AND deleted_at IS NULL"), eq(Long.class), eq(schoolId)))
+                .thenReturn(120L);
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM attendance_session WHERE school_id = ? AND deleted_at IS NULL"), eq(Long.class), eq(schoolId)))
+                .thenReturn(0L);
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM attendance_event WHERE school_id = ?"), eq(Long.class), eq(schoolId)))
+                .thenReturn(0L);
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM attendance_event WHERE school_id = ? AND lower(status) = 'present'"), eq(Long.class), eq(schoolId)))
+                .thenReturn(0L);
+        when(jdbcTemplate.queryForObject(eq("SELECT AVG(marks) FROM exam_script WHERE school_id = ? AND deleted_at IS NULL AND marks IS NOT NULL"), eq(Double.class), eq(schoolId)))
+                .thenReturn(null);
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM competency WHERE school_id = ? AND deleted_at IS NULL"), eq(Long.class), eq(schoolId)))
+                .thenReturn(0L);
 
         Map<String, Object> overview = analyticsService.getOverview(schoolId);
 
@@ -78,9 +63,8 @@ class AnalyticsServiceTest {
     @Test
     void getAcademicPerformanceReturnsDistributionsAndComparisons() {
         UUID schoolId = UUID.randomUUID();
-        when(examAssessmentRepository.findAll()).thenReturn(Collections.emptyList());
-        when(classGroupRepository.findAll()).thenReturn(Collections.emptyList());
-        when(subjectRepository.findAll()).thenReturn(Collections.emptyList());
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM exam_assessment WHERE school_id = ? AND deleted_at IS NULL"), eq(Long.class), eq(schoolId)))
+                .thenReturn(5L);
 
         Map<String, Object> res = analyticsService.getAcademicPerformance(schoolId, null, null);
 
@@ -92,8 +76,10 @@ class AnalyticsServiceTest {
     @Test
     void getCompetencyMasteryReturnsBreakdownAndCoverage() {
         UUID schoolId = UUID.randomUUID();
-        when(competencyRepository.findAll()).thenReturn(Collections.emptyList());
-        when(rubricCriterionRepository.findAll()).thenReturn(Collections.emptyList());
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM competency WHERE school_id = ? AND deleted_at IS NULL"), eq(Long.class), eq(schoolId)))
+                .thenReturn(10L);
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM rubric_criterion WHERE school_id = ? AND deleted_at IS NULL"), eq(Long.class), eq(schoolId)))
+                .thenReturn(25L);
 
         Map<String, Object> res = analyticsService.getCompetencyMastery(schoolId);
 
@@ -104,7 +90,8 @@ class AnalyticsServiceTest {
     @Test
     void getAttendanceAnalyticsReturnsCountsAndTrend() {
         UUID schoolId = UUID.randomUUID();
-        when(attendanceSessionRepository.findAll()).thenReturn(Collections.emptyList());
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM attendance_session WHERE school_id = ? AND deleted_at IS NULL"), eq(Long.class), eq(schoolId)))
+                .thenReturn(10L);
 
         Map<String, Object> res = analyticsService.getAttendanceAnalytics(schoolId, "2026-01-01", "2026-01-31");
 
@@ -115,8 +102,10 @@ class AnalyticsServiceTest {
     @Test
     void getDataQualityReturnsStatus() {
         UUID schoolId = UUID.randomUUID();
-        when(attendanceSessionRepository.findAll()).thenReturn(Collections.emptyList());
-        when(examScriptRepository.findAll()).thenReturn(Collections.emptyList());
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM attendance_session WHERE school_id = ? AND deleted_at IS NULL"), eq(Long.class), eq(schoolId)))
+                .thenReturn(5L);
+        when(jdbcTemplate.queryForObject(eq("SELECT COUNT(*) FROM exam_script WHERE school_id = ? AND deleted_at IS NULL AND moderated_at IS NULL"), eq(Long.class), eq(schoolId)))
+                .thenReturn(0L);
 
         Map<String, Object> res = analyticsService.getDataQuality(schoolId);
 

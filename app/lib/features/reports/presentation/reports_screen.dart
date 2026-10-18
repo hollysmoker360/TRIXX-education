@@ -584,7 +584,7 @@ class _ExportsTab extends ConsumerWidget {
                       loading: () => const LinearProgressIndicator(),
                       error: (e, _) => Text('$e'),
                       data: (rows) => DropdownButtonFormField<String>(
-                        value: classGroupId,
+                        initialValue: classGroupId,
                         decoration: InputDecoration(
                           labelText: s.classLabel,
                           border: const OutlineInputBorder(),
