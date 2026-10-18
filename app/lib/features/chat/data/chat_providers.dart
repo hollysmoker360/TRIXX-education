@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show unawaited;
+import 'dart:async' show unawaited;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/chat/chat_socket.dart';
