@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Lazy;
 
 @Service
 @Transactional
@@ -28,7 +29,7 @@ public class InvitationService implements InvitationApi {
                              UserRepository userRepository,
                              PasswordEncoder passwordEncoder,
                              TenantsApi tenantsApi,
-                             PeopleApi peopleApi,
+                             @Lazy PeopleApi peopleApi,
                              AuditLogService auditLogService) {
         this.invitationRepository = invitationRepository;
         this.userRepository = userRepository;
