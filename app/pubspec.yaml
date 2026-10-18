@@ -36,7 +36,7 @@ dev_dependencies:
 #   dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
   web:
     generate: true
     image_path: assets/brand/trixx-app-icon-1024.png
