@@ -9,10 +9,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Lazy;
 
 @Service
 @Transactional
@@ -22,14 +22,14 @@ public class InvitationService implements InvitationApi {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TenantsApi tenantsApi;
-    private final PeopleApi peopleApi;
+    private final ObjectProvider<PeopleApi> peopleApi;
     private final AuditLogService auditLogService;
 
     public InvitationService(InvitationRepository invitationRepository,
                              UserRepository userRepository,
                              PasswordEncoder passwordEncoder,
                              TenantsApi tenantsApi,
-                             @Lazy PeopleApi peopleApi,
+                             ObjectProvider<PeopleApi> peopleApi,
                              AuditLogService auditLogService) {
         this.invitationRepository = invitationRepository;
         this.userRepository = userRepository;
@@ -89,7 +89,7 @@ public class InvitationService implements InvitationApi {
 
         String studentName = null;
         if (invitation.getSchoolId() != null && invitation.getChildStudentId() != null) {
-            studentName = peopleApi.findStudent(invitation.getSchoolId(), invitation.getChildStudentId())
+            studentName = peopleApi.getObject().findStudent(invitation.getSchoolId(), invitation.getChildStudentId())
                     .map(PeopleApi.StudentRef::fullName)
                     .orElse(null);
         }
@@ -141,15 +141,15 @@ public class InvitationService implements InvitationApi {
             tenantsApi.ensureMembership(invitation.getSchoolId(), user.getId(), invitation.getRoleCode());
 
             if (invitation.getChildStudentId() != null && "parent".equalsIgnoreCase(invitation.getRoleCode())) {
-                PeopleApi.ParentRef parent = peopleApi.parentForUser(invitation.getSchoolId(), user.getId()).orElse(null);
+                PeopleApi.ParentRef parent = peopleApi.getObject().parentForUser(invitation.getSchoolId(), user.getId()).orElse(null);
                 if (parent == null) {
                     String[] parts = displayName.trim().split("\\s+", 2);
                     String firstName = parts[0];
                     String lastName = parts.length > 1 ? parts[1] : "Parent";
-                    parent = peopleApi.createParent(invitation.getSchoolId(), user.getId(), firstName, lastName, phone);
+                    parent = peopleApi.getObject().createParent(invitation.getSchoolId(), user.getId(), firstName, lastName, phone);
                 }
                 try {
-                    peopleApi.createGuardianLink(
+                    peopleApi.getObject().createGuardianLink(
                             invitation.getSchoolId(),
                             parent.id(),
                             invitation.getChildStudentId(),
