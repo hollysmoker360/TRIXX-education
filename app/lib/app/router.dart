@@ -53,6 +53,7 @@ export '../core/router/app_routes.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   final session = ref.watch(sessionProvider);
   final hasActiveMembership = session.memberships.any((m) => m.status == 'active');
+  final isPlatformAdmin = session.user?.isPlatformAdmin ?? false;
 
   return GoRouter(
     initialLocation: AppRoutes.home,
@@ -73,6 +74,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (location == AppRoutes.login || location == AppRoutes.landing || location == AppRoutes.resetPassword) {
         return hasActiveMembership ? AppRoutes.home : AppRoutes.selectSchool;
       }
+      // Platform admins bypass school membership requirement entirely
+      if (isPlatformAdmin) return null;
       if (!hasActiveMembership && location != AppRoutes.selectSchool) {
         return AppRoutes.selectSchool;
       }
