@@ -33,7 +33,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final ok = await ref.read(sessionProvider.notifier).signIn(_email.text.trim(), _password.text);
-    if (ok && mounted) context.go(AppRoutes.home);
+    if (!ok || !mounted) return;
+    final session = ref.read(sessionProvider);
+    if (session.user?.isPlatformAdmin == true) {
+      context.go(AppRoutes.superAdmin);
+    } else {
+      context.go(AppRoutes.home);
+    }
   }
 
   @override
