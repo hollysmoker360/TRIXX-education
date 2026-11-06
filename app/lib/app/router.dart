@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,6 +11,7 @@ import '../features/attendance/presentation/attendance_screen.dart';
 import '../features/audit/presentation/audit_screen.dart';
 import '../features/auth/presentation/accept_invitation_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/landing/presentation/landing_screen.dart';
 import '../features/auth/presentation/mfa_screen.dart';
 import '../features/auth/presentation/reset_password_screen.dart';
 import '../features/auth/presentation/school_select_screen.dart';
@@ -20,8 +21,23 @@ import '../features/chat/presentation/chat_screen.dart';
 import '../features/gallery/presentation/component_gallery_screen.dart';
 import '../features/home/presentation/home_shell.dart';
 import '../features/notifications/presentation/notifications_screen.dart';
-import '../features/people/presentation/student_profile_screen.dart';
+import '../features/people/presentation/student_profile_screen.dart' as people_student_profile_screen;
 import '../features/quizzes/presentation/quizzes_screen.dart';
+import '../features/student_success/presentation/student_profile_screen.dart' as success_student_profile_screen;
+import '../features/grades/presentation/assessment_entry_screen.dart';
+import '../features/grades/presentation/gradebook_screen.dart';
+import '../features/reports/presentation/assessment_completion_screen.dart';
+import '../features/reports/presentation/attendance_patterns_screen.dart';
+import '../features/reports/presentation/collection_summary_screen.dart';
+import '../features/reports/presentation/competency_mastery_screen.dart';
+import '../features/reports/presentation/evidence_coverage_screen.dart';
+import '../features/reports/presentation/expenditure_screen.dart';
+import '../features/reports/presentation/grade_distribution_screen.dart';
+import '../features/reports/presentation/staffing_screen.dart';
+import '../features/reports/presentation/student_engagement_screen.dart';
+import '../features/reports/presentation/subject_comparison_screen.dart';
+import '../features/reports/presentation/term_over_term_screen.dart';
+import '../features/reports/presentation/enrollment_screen.dart';
 
 export '../core/router/app_routes.dart';
 
@@ -37,6 +53,7 @@ export '../core/router/app_routes.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   final session = ref.watch(sessionProvider);
   final hasActiveMembership = session.memberships.any((m) => m.status == 'active');
+  final isPlatformAdmin = session.user?.isPlatformAdmin ?? false;
 
   return GoRouter(
     initialLocation: AppRoutes.home,
@@ -45,23 +62,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ),
     redirect: (context, state) {
       final location = state.matchedLocation;
-      final atAuth = location == AppRoutes.login ||
+      final atAuth = location == AppRoutes.landing ||
+          location == AppRoutes.login ||
           location == AppRoutes.acceptInvitation ||
           location == AppRoutes.resetPassword ||
           location == AppRoutes.mfa ||
           location == AppRoutes.sessionExpired;
 
       if (session.initializing) return null;
-      if (!session.isSignedIn) return atAuth ? null : AppRoutes.login;
-      if (location == AppRoutes.login || location == AppRoutes.resetPassword) {
+      if (!session.isSignedIn) return atAuth ? null : AppRoutes.landing;
+      if (location == AppRoutes.login || location == AppRoutes.landing || location == AppRoutes.resetPassword) {
         return hasActiveMembership ? AppRoutes.home : AppRoutes.selectSchool;
       }
+      // Platform admins bypass school membership requirement entirely
+      if (isPlatformAdmin) return null;
       if (!hasActiveMembership && location != AppRoutes.selectSchool) {
         return AppRoutes.selectSchool;
       }
       return null;
     },
     routes: [
+      GoRoute(path: AppRoutes.landing, builder: (context, state) => const LandingScreen()),
       GoRoute(path: AppRoutes.login, builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: AppRoutes.acceptInvitation,
@@ -97,7 +118,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.audit, builder: (context, state) => const AuditScreen()),
       GoRoute(
         path: AppRoutes.studentProfile,
-        builder: (context, state) => StudentProfileScreen(
+        builder: (context, state) => people_student_profile_screen.StudentProfileScreen(
           studentId: state.pathParameters['studentId']!,
           initialName: state.extra is String ? state.extra as String : null,
         ),
@@ -138,6 +159,73 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           sessionId: state.pathParameters['sessionId']!,
         ),
       ),
+      GoRoute(
+        path: AppRoutes.assessmentEntry,
+        builder: (context, state) => AssessmentEntryScreen(
+          classId: state.extra is String ? state.extra as String : null,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.classGradebook,
+        builder: (context, state) => GradebookScreen(
+          classId: state.pathParameters['classId']!,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.studentReferral,
+        builder: (context, state) => success_student_profile_screen.StudentProfileScreen(
+          studentId: state.extra is String ? state.extra as String : '',
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsGradeDistribution,
+        builder: (context, state) => const GradeDistributionScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsSubjectComparison,
+        builder: (context, state) => const SubjectComparisonScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsAssessmentCompletion,
+        builder: (context, state) => const AssessmentCompletionScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsTermOverTerm,
+        builder: (context, state) => const TermOverTermScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsCompetencyMastery,
+        builder: (context, state) => const CompetencyMasteryScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsEvidenceCoverage,
+        builder: (context, state) => const EvidenceCoverageScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsAttendancePatterns,
+        builder: (context, state) => const AttendancePatternsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsStudentEngagement,
+        builder: (context, state) => const StudentEngagementScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsCollectionSummary,
+        builder: (context, state) => const CollectionSummaryScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsExpenditure,
+        builder: (context, state) => const ExpenditureScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsEnrollment,
+        builder: (context, state) => const EnrollmentScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportsStaffing,
+        builder: (context, state) => const StaffingScreen(),
+      ),
     ],
   );
 });
+

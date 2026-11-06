@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-circular-references: true
   application:
     name: schoolsphere
   profiles:
@@ -15,6 +17,9 @@ spring:
     multipart:
       max-file-size: 25MB
       max-request-size: 30MB
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   jackson:
     default-property-inclusion: non_null
     serialization:
@@ -46,7 +51,6 @@ schoolsphere:
   security:
     jwt:
       issuer: schoolsphere
-      # Rotatable keys. The first entry is used for signing; all entries are accepted for verification.
       signing-keys:
         - kid: k-dev-1
           secret: ${SCHOOLSPHERE_JWT_SECRET:kZ8tR2xQ9mL4vN7pW1yA6cD3fG5jH0sB8eT2uI4oP6zX9qM1nV3bC5dF7gJ9kL0}
@@ -64,6 +68,7 @@ schoolsphere:
 
 springdoc:
   api-docs:
+    enabled: false
     path: /api/v1/openapi.json
   swagger-ui:
     path: /api/v1/docs

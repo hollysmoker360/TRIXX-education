@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -28,7 +29,8 @@ class InvitationServiceTest {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private TenantsApi tenantsApi;
-    private PeopleApi peopleApi;
+    private PeopleApi peopleApiMock;
+    private ObjectProvider<PeopleApi> peopleApi;
     private AuditLogService auditLogService;
     private InvitationService invitationService;
 
@@ -38,7 +40,13 @@ class InvitationServiceTest {
         userRepository = mock(UserRepository.class);
         passwordEncoder = new BCryptPasswordEncoder();
         tenantsApi = mock(TenantsApi.class);
-        peopleApi = mock(PeopleApi.class);
+        peopleApiMock = mock(PeopleApi.class);
+        peopleApi = new ObjectProvider<PeopleApi>() {
+            @Override
+            public PeopleApi getObject() {
+                return peopleApiMock;
+            }
+        };
         auditLogService = mock(AuditLogService.class);
 
         invitationService = new InvitationService(
@@ -90,7 +98,7 @@ class InvitationServiceTest {
         invitation.setExpiresAt(Instant.now().plus(2, ChronoUnit.DAYS));
 
         when(invitationRepository.findByToken("valid-token")).thenReturn(Optional.of(invitation));
-        when(peopleApi.findStudent(schoolId, studentId))
+        when(peopleApiMock.findStudent(schoolId, studentId))
                 .thenReturn(Optional.of(new PeopleApi.StudentRef(studentId, null, "ADM-001", "Faith", "Njeri", "active")));
 
         InvitationApi.InvitationDetails details = invitationService.getInvitationDetails("valid-token");
@@ -132,8 +140,8 @@ class InvitationServiceTest {
         when(invitationRepository.findByToken("token-123")).thenReturn(Optional.of(invitation));
         when(userRepository.findByEmailIgnoreCaseAndDeletedAtIsNull("alice@example.com")).thenReturn(Optional.empty());
 
-        when(peopleApi.parentForUser(eq(schoolId), any())).thenReturn(Optional.empty());
-        when(peopleApi.createParent(eq(schoolId), any(), eq("Alice"), eq("Njeri"), eq("0712345678")))
+        when(peopleApiMock.parentForUser(eq(schoolId), any())).thenReturn(Optional.empty());
+        when(peopleApiMock.createParent(eq(schoolId), any(), eq("Alice"), eq("Njeri"), eq("0712345678")))
                 .thenReturn(new PeopleApi.ParentRef(UUID.randomUUID(), parentUserId, "Alice", "Njeri"));
 
         InvitationApi.CompletedInvitation result = invitationService.completeInvitation(
@@ -147,6 +155,6 @@ class InvitationServiceTest {
         assertThat(result.email()).isEqualTo("alice@example.com");
         assertThat(invitation.getStatus()).isEqualTo("ACCEPTED");
         verify(tenantsApi).ensureMembership(eq(schoolId), any(), eq("parent"));
-        verify(peopleApi).createGuardianLink(eq(schoolId), any(), eq(childStudentId), eq("parent"), eq(true), any());
+        verify(peopleApiMock).createGuardianLink(eq(schoolId), any(), eq(childStudentId), eq("parent"), eq(true), any());
     }
 }

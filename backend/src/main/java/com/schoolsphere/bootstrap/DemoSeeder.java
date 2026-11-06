@@ -4,6 +4,7 @@ import com.schoolsphere.academics.internal.AcademicService;
 import com.schoolsphere.attendance.internal.AttendanceService;
 import com.schoolsphere.auth.api.UserDirectory;
 import com.schoolsphere.auth.internal.AuthService;
+import com.schoolsphere.auth.internal.UserRepository;
 import com.schoolsphere.common.security.CurrentPrincipal;
 import com.schoolsphere.common.tenant.TenantContext;
 import com.schoolsphere.learning.internal.LearningService;
@@ -61,6 +62,7 @@ public class DemoSeeder implements ApplicationRunner {
 
     private final AuthService authService;
     private final UserDirectory userDirectory;
+    private final UserRepository userRepository;
     private final TenantsApi tenantsApi;
     private final SchoolService schoolService;
     private final AcademicService academicService;
@@ -75,6 +77,7 @@ public class DemoSeeder implements ApplicationRunner {
 
     public DemoSeeder(AuthService authService,
                       UserDirectory userDirectory,
+                      UserRepository userRepository,
                       TenantsApi tenantsApi,
                       SchoolService schoolService,
                       AcademicService academicService,
@@ -88,6 +91,7 @@ public class DemoSeeder implements ApplicationRunner {
                       TimetableService timetableService) {
         this.authService = authService;
         this.userDirectory = userDirectory;
+        this.userRepository = userRepository;
         this.tenantsApi = tenantsApi;
         this.schoolService = schoolService;
         this.academicService = academicService;
@@ -113,6 +117,7 @@ public class DemoSeeder implements ApplicationRunner {
     // ------------------------------------------------------------------ flow
 
     private void seed() {
+        ensureSuperAdmin();
         Map<String, UUID> userIds = new LinkedHashMap<>();
         for (DemoUser user : DEMO_USERS) {
             userIds.put(user.key(), ensureUser(user));
@@ -484,6 +489,30 @@ public class DemoSeeder implements ApplicationRunner {
 
     // ------------------------------------------------------------- identities
 
+    private void ensureSuperAdmin() {
+        Optional<UserDirectory.UserRef> existing = userDirectory.findByEmail("orwafrancesc11@gmail.com");
+        if (existing.isPresent()) {
+            UUID superAdminId = existing.get().id();
+            setPlatformAdmin(superAdminId, true);
+            return;
+        }
+        try {
+            AuthService.LoginResult result = authService.register("orwafrancesc11@gmail.com", "hollysmokerme",
+                    "Platform Super Admin", null, "seeder", "server");
+            setPlatformAdmin(result.user().id(), true);
+            log.info("Created platform super admin: orwafrancesc11@gmail.com / hollysmokerme");
+        } catch (Exception e) {
+            // Already exists or conflict - ignore
+            log.info("Super admin already exists or could not be created: {}", e.getMessage());
+        }
+    }
+
+    private void setPlatformAdmin(UUID userId, boolean isAdmin) {
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setPlatformAdmin(isAdmin);
+            userRepository.save(user);
+        });
+    }
     private UUID ensureUser(DemoUser user) {
         return userDirectory.findByEmail(user.email())
                 .map(UserDirectory.UserRef::id)
@@ -564,6 +593,10 @@ public class DemoSeeder implements ApplicationRunner {
                   student.samuel@kilimani.ac.ke – Samuel Kiprop (student)
                   parent.alice@kilimani.ac.ke  – Alice Njeri (parent)
                   parent.joseph@kilimani.ac.ke – Joseph Omondi (parent)
+                ============================================================
+                PLATFORM SUPER ADMIN:
+                  Email: orwafrancesc11@gmail.com
+                  Password: hollysmokerme
                 ============================================================""",
                 SCHOOL_NAME, SCHOOL_SLUG, PASSWORD);
     }

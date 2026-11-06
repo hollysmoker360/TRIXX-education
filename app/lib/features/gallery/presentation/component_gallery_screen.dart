@@ -72,10 +72,10 @@ class _GalleryBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sampleSeries = <(String, double)>[
-      ('Grade 7', 84),
-      ('Grade 8', 71),
-      ('Grade 9', 63),
+    final sampleSeries = <MapEntry<String, double>>[
+      MapEntry('Grade 7', 84),
+      MapEntry('Grade 8', 71),
+      MapEntry('Grade 9', 63),
     ];
 
     return Column(
@@ -316,7 +316,7 @@ class _GalleryBody extends StatelessWidget {
               AccessibleChart(
                 title: 'Average score by grade',
                 summary: 'Bar chart: Grade 7 average 84, Grade 8 average 71, Grade 9 average 63.',
-                rows: const [('Grade 7', '84'), ('Grade 8', '71'), ('Grade 9', '63')],
+                rows: const [MapEntry('Grade 7', '84'), MapEntry('Grade 8', '71'), MapEntry('Grade 9', '63')],
                 chart: SimpleBarChart(series: sampleSeries, unit: '%'),
               ),
               const SizedBox(height: AppSpacing.s16),

@@ -23,7 +23,7 @@ class AccessibleChart extends StatefulWidget {
   final Widget chart;
 
   /// Tabular equivalent of the data ([label, value]).
-  final List<(String, String)> rows;
+  final List<MapEntry<String, String>> rows;
   final String? title;
   final double height;
 
@@ -65,7 +65,7 @@ class _AccessibleChartState extends State<AccessibleChart> {
 class _DataTableAlt extends StatelessWidget {
   const _DataTableAlt({required this.rows});
 
-  final List<(String, String)> rows;
+  final List<MapEntry<String, String>> rows;
 
   @override
   Widget build(BuildContext context) {
@@ -73,17 +73,17 @@ class _DataTableAlt extends StatelessWidget {
       border: TableBorder(horizontalInside: BorderSide(color: context.tokens.border)),
       columnWidths: const {0: FlexColumnWidth(2), 1: FlexColumnWidth()},
       children: [
-        for (final (label, value) in rows)
+        for (final entry in rows)
           TableRow(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-                child: Text(label, style: context.texts.bodyMedium),
+                child: Text(entry.key, style: context.texts.bodyMedium),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
                 child: Text(
-                  value,
+                  entry.value,
                   textAlign: TextAlign.end,
                   style: AppType.numeric(context.texts.bodyMedium),
                 ),
@@ -104,7 +104,7 @@ class SimpleBarChart extends StatefulWidget {
   const SimpleBarChart({super.key, required this.series, this.unit});
 
   /// Series index → name → value.
-  final List<(String, double)> series;
+  final List<MapEntry<String, double>> series;
   final String? unit;
 
   @override
@@ -138,7 +138,7 @@ class _SimpleBarChartState extends State<SimpleBarChart> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     final series = widget.series;
-    final maxValue = series.fold<double>(0, (m, e) => math.max(m, e.$2));
+    final maxValue = series.fold<double>(0, (m, e) => math.max(m, e.value));
     final palette = context.tokens.series;
     final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final growth = reduceMotion
@@ -159,8 +159,8 @@ class _SimpleBarChartState extends State<SimpleBarChart> with SingleTickerProvid
                   children: [
                     Text(
                       widget.unit == null
-                          ? _fmt(series[i].$2)
-                          : '${_fmt(series[i].$2)}${widget.unit}',
+                          ? _fmt(series[i].value)
+                          : '${_fmt(series[i].value)}${widget.unit}',
                       style: AppType.numeric(context.texts.labelSmall),
                     ),
                     const SizedBox(height: AppSpacing.s4),
@@ -169,7 +169,7 @@ class _SimpleBarChartState extends State<SimpleBarChart> with SingleTickerProvid
                         animation: growth,
                         builder: (context, _) {
                           final target =
-                              maxValue == 0 ? 0.0 : (series[i].$2 / maxValue).clamp(0.02, 1).toDouble();
+                              maxValue == 0 ? 0.0 : (series[i].value / maxValue).clamp(0.02, 1).toDouble();
                           return FractionallySizedBox(
                             heightFactor: target * growth.value,
                             child: DecoratedBox(
@@ -193,7 +193,7 @@ class _SimpleBarChartState extends State<SimpleBarChart> with SingleTickerProvid
                     ),
                     const SizedBox(height: AppSpacing.s8),
                     Text(
-                      series[i].$1,
+                      series[i].key,
                       style: context.texts.labelSmall,
                       textAlign: TextAlign.center,
                       maxLines: 2,

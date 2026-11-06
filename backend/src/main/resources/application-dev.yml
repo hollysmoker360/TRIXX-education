@@ -12,6 +12,9 @@ spring:
     user: ${SCHOOLSPHERE_DB_OWNER:schoolsphere}
     password: ${SCHOOLSPHERE_DB_OWNER_PASSWORD:schoolsphere_dev}
     locations: classpath:db/migration
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
 schoolsphere:
   profile: dev

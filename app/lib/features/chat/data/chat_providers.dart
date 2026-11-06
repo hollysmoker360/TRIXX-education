@@ -21,7 +21,7 @@ final chatSocketProvider = Provider<ChatSocket?>((ref) {
   );
 
   ref.onDispose(() {
-    unawaited(socket.dispose());
+    socket.dispose();
   });
 
   return socket;

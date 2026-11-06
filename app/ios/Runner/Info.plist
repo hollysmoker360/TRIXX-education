@@ -15,11 +15,15 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
+  feat/superadmin-and-parent-invitations-13971389883588594553
 	<string>Trixx Education</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Trixx Education requires camera access for online video classes and profile photos.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Trixx Education requires microphone access for online video classes.</string>
+
+	<string>schoolsphere_app</string>
+ main
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

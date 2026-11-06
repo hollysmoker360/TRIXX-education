@@ -330,6 +330,25 @@ extension AppTokensX on BuildContext {
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
 }
 
+/// Maps a [StatusKind] to a representative color for chips, badges, and dots.
+extension ColorSchemeStatus on ColorScheme {
+  Color status(StatusKind kind) {
+    switch (kind) {
+      case StatusKind.success:
+        return Colors.green;
+      case StatusKind.warning:
+        return Colors.amber;
+      case StatusKind.error:
+        return Colors.red;
+      case StatusKind.info:
+        return Colors.blue;
+      case StatusKind.neutral:
+      case StatusKind.pending:
+        return Colors.grey;
+    }
+  }
+}
+
 /// Relative luminance / contrast helpers (WCAG 2.2). Used to keep school accent
 /// colours and status foregrounds readable (sections 4.5 and 9).
 abstract final class Contrast {
